@@ -61,6 +61,14 @@ Analyze the input and extract every identifiable item. Return ONLY a JSON object
 
 Rules:
 - Extract ALL distinct items — mix of notes, tasks, links, credentials is valid
+- Be very tolerant with messy credential dumps. Users often paste raw lines, not sentences.
+- Treat labels like "U", "User", "Username", "Login", "Email", "SGO", "ID", "Account" as username/login labels.
+- Treat labels like "P", "Pass", "Password", "Pwd", "Senha" as password labels.
+- A URL followed by username/password lines is usually a credential for that website. Use type="credential" and include url.
+- A standalone service/title line followed by username/password lines is a credential for that service.
+- If one block contains multiple service/title + username/password groups, extract each group as a separate credential.
+- If a credential has no explicit username but has a service/title and password, still extract it using username="".
+- If a credential has a username/login and password but no service, infer service from nearby URL/domain or nearby title line.
 - Tasks: use today (${ctx.today}) when no date given; resolve relative dates to YYYY-MM-DD
 - Notes: suggest folderId only from the provided IDs; pick the most thematically matching folder, or null
 - Links (type="link"): use when a URL is the primary item being saved (bookmarking a page). If the link also has username/password, put them in the link item

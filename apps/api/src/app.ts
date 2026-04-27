@@ -4,6 +4,7 @@ import { envPlugin } from './infrastructure/http/plugins/env.js'
 import { helmetPlugin } from './infrastructure/http/plugins/helmet.js'
 import { rateLimitPlugin } from './infrastructure/http/plugins/rate-limit.js'
 import { corsPlugin } from './infrastructure/http/plugins/cors.js'
+import { originGuardPlugin } from './infrastructure/http/plugins/origin-guard.js'
 import { cookiePlugin } from './infrastructure/http/plugins/cookie.js'
 import { jwtPlugin } from './infrastructure/http/plugins/jwt.js'
 import { prismaPlugin } from './infrastructure/http/plugins/prisma.js'
@@ -22,6 +23,9 @@ const DOMAIN_STATUS_MAP: Record<string, number> = {
   ACCOUNT_LOCKED: 429,
   TASK_NOT_FOUND: 404,
   TASK_ACCESS_DENIED: 403,
+  NOT_FOUND: 404,
+  ACCESS_DENIED: 403,
+  INVALID_RELATION: 400,
 }
 
 export async function buildApp() {
@@ -56,11 +60,12 @@ export async function buildApp() {
     return reply.status(500).send({ statusCode: 500, message: 'Internal server error' })
   })
 
-  // Plugin order: env → helmet → rate-limit → cors → cookie → jwt → prisma → container → routes
+  // Plugin order: env → helmet → rate-limit → cors → origin guard → cookie → jwt → prisma → container → routes
   await app.register(envPlugin)
   await app.register(helmetPlugin)
   await app.register(rateLimitPlugin)
   await app.register(corsPlugin)
+  await app.register(originGuardPlugin)
   await app.register(cookiePlugin)
   await app.register(jwtPlugin)
   await app.register(prismaPlugin)

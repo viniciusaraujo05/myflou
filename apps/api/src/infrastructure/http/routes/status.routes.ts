@@ -1,12 +1,13 @@
 import type { FastifyInstance } from 'fastify'
 import { CreateStatusBodySchema, UpdateStatusBodySchema } from '../schemas/status.http-schema.js'
+import { getRequestUserId } from '../request-user.js'
 
 export async function statusRoutes(app: FastifyInstance) {
   const auth = { preHandler: [app.authenticate] }
 
   // GET /statuses
   app.get('/', auth, async (request, reply) => {
-    const { sub: userId } = request.user as { sub: string }
+    const userId = getRequestUserId(request)
     const statuses = await app.container.status.getStatuses.execute(userId)
     return reply.send(statuses)
   })
@@ -21,7 +22,7 @@ export async function statusRoutes(app: FastifyInstance) {
         code: 'VALIDATION_ERROR',
       })
     }
-    const { sub: userId } = request.user as { sub: string }
+    const userId = getRequestUserId(request)
     const status = await app.container.status.createStatus.execute({ userId, ...parsed.data })
     return reply.status(201).send(status)
   })
@@ -37,7 +38,7 @@ export async function statusRoutes(app: FastifyInstance) {
         code: 'VALIDATION_ERROR',
       })
     }
-    const { sub: userId } = request.user as { sub: string }
+    const userId = getRequestUserId(request)
     const status = await app.container.status.updateStatus.execute({ userId, statusId, ...parsed.data })
     return reply.send(status)
   })
@@ -45,7 +46,7 @@ export async function statusRoutes(app: FastifyInstance) {
   // DELETE /statuses/:id
   app.delete('/:id', auth, async (request, reply) => {
     const { id: statusId } = request.params as { id: string }
-    const { sub: userId } = request.user as { sub: string }
+    const userId = getRequestUserId(request)
     await app.container.status.deleteStatus.execute({ userId, statusId })
     return reply.status(204).send()
   })

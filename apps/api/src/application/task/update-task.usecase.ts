@@ -1,6 +1,8 @@
 import type { ITaskRepository } from '../../domain/task/task.repository.js'
+import type { IUserRepository } from '../../domain/user/user.repository.js'
 import type { TaskDTO } from '../../domain/task/task.entity.js'
 import { TaskNotFoundError, TaskAccessDeniedError } from '../../domain/task/task.errors.js'
+import { InvalidRelationError } from '../../domain/shared/domain-error.js'
 
 interface Input {
   taskId: string
@@ -14,12 +16,21 @@ interface Input {
 }
 
 export class UpdateTaskUseCase {
-  constructor(private readonly taskRepo: ITaskRepository) {}
+  constructor(
+    private readonly taskRepo: ITaskRepository,
+    private readonly userRepo: IUserRepository,
+  ) {}
 
   async execute(input: Input): Promise<TaskDTO> {
     const task = await this.taskRepo.findById(input.taskId)
     if (!task) throw new TaskNotFoundError()
     if (task.userId !== input.userId) throw new TaskAccessDeniedError()
+    if (input.statusId) {
+      const user = await this.userRepo.findById(input.userId)
+      if (!user || !user.statuses.some(s => s.id === input.statusId)) {
+        throw new InvalidRelationError('Status')
+      }
+    }
 
     const data: {
       title?: string

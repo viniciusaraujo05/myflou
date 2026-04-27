@@ -1,4 +1,5 @@
 import type { ILinkRepository } from '../../domain/link/link.repository.js'
+import { NotFoundError } from '../../domain/shared/domain-error.js'
 
 interface Input {
   linkId: string
@@ -10,7 +11,7 @@ export class DeleteLinkUseCase {
 
   async execute(input: Input): Promise<void> {
     const link = await this.linkRepo.findById(input.linkId)
-    if (!link || link.userId !== input.userId) throw new Error('Not found')
+    if (!link || link.userId !== input.userId) throw new NotFoundError('Link')
     await this.linkRepo.delete(input.linkId)
   }
 }

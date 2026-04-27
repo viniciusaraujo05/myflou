@@ -5,13 +5,14 @@ interface Input {
   userId: string
   folderId?: string
   q?: string
+  search?: string
 }
 
 export class GetNotesUseCase {
   constructor(private readonly noteRepo: INotRepository) {}
 
   async execute(input: Input): Promise<NoteSummaryDTO[]> {
-    const notes = await this.noteRepo.findByUser(input.userId, input.folderId, input.q)
+    const notes = await this.noteRepo.findByUser(input.userId, input.folderId, input.search ?? input.q)
     return notes.map(n => n.toSummaryDTO())
   }
 }

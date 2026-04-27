@@ -1,11 +1,12 @@
 import type { FastifyInstance } from 'fastify'
 import { CreateFolderSchema, UpdateFolderSchema } from '../schemas/folder.http-schema.js'
+import { getRequestUserId } from '../request-user.js'
 
 export async function folderRoutes(app: FastifyInstance) {
   const auth = { preHandler: [app.authenticate] }
 
   app.get('/', auth, async (request, reply) => {
-    const { sub: userId } = request.user as { sub: string }
+    const userId = getRequestUserId(request)
     const folders = await app.container.folder.getFolders.execute(userId)
     return reply.send(folders)
   })
@@ -19,7 +20,7 @@ export async function folderRoutes(app: FastifyInstance) {
         code: 'VALIDATION_ERROR',
       })
     }
-    const { sub: userId } = request.user as { sub: string }
+    const userId = getRequestUserId(request)
     const folder = await app.container.folder.createFolder.execute({ userId, ...parsed.data })
     return reply.status(201).send(folder)
   })
@@ -34,23 +35,15 @@ export async function folderRoutes(app: FastifyInstance) {
         code: 'VALIDATION_ERROR',
       })
     }
-    const { sub: userId } = request.user as { sub: string }
-    const existing = await app.prisma.folder.findUnique({ where: { id: folderId } })
-    if (!existing || existing.userId !== userId) {
-      return reply.status(404).send({ statusCode: 404, message: 'Not found' })
-    }
-    const folder = await app.container.folder.updateFolder.execute({ folderId, ...parsed.data })
+    const userId = getRequestUserId(request)
+    const folder = await app.container.folder.updateFolder.execute({ folderId, userId, ...parsed.data })
     return reply.send(folder)
   })
 
   app.delete('/:id', auth, async (request, reply) => {
     const { id: folderId } = request.params as { id: string }
-    const { sub: userId } = request.user as { sub: string }
-    const existing = await app.prisma.folder.findUnique({ where: { id: folderId } })
-    if (!existing || existing.userId !== userId) {
-      return reply.status(404).send({ statusCode: 404, message: 'Not found' })
-    }
-    await app.container.folder.deleteFolder.execute(folderId)
+    const userId = getRequestUserId(request)
+    await app.container.folder.deleteFolder.execute({ folderId, userId })
     return reply.status(204).send()
   })
 }

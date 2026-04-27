@@ -10,4 +10,5 @@ export interface IRefreshTokenRepository {
   create(userId: string, tokenHash: string, tokenPrefix: string, expiresAt: Date): Promise<void>
   findByPrefix(prefix: string): Promise<RefreshTokenRecord[]>
   deleteById(id: string): Promise<void>
+  deleteExpired(now: Date): Promise<void>
 }

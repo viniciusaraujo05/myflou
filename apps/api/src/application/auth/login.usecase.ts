@@ -10,7 +10,7 @@ const MAX_FAILED_ATTEMPTS = 5
 const LOCKOUT_DURATION_MS = 15 * 60 * 1000 // 15 minutes
 
 // Dummy hash used when user not found — prevents timing-based user enumeration
-const DUMMY_HASH = '$2b$12$invalidhashtopreventtimingattacks0000000000000000000000'
+const DUMMY_HASH = '$2a$12$w/0X8.oeDgImyUsl5T0W7evS1Nm6i9ow9s16X7xFWh5V8KieWZZs.'
 
 interface LoginInput {
   email: string
@@ -55,6 +55,7 @@ export class LoginUseCase {
 
     // Successful login — clear failed attempts counter
     await this.userRepo.resetFailedAttempts(user.id)
+    await this.refreshTokenRepo.deleteExpired(new Date())
 
     const accessToken = this.tokenService.signAccessToken({ sub: user.id, email: user.email.value })
     const rawRefreshToken = this.tokenService.generateRefreshToken()

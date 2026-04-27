@@ -1,4 +1,5 @@
 import { UserNotFoundError } from '../../domain/user/user.errors.js'
+import { NotFoundError } from '../../domain/shared/domain-error.js'
 import type { IUserRepository } from '../../domain/user/user.repository.js'
 import type { StatusRecord } from '../../domain/user/user.entity.js'
 
@@ -17,7 +18,7 @@ export class UpdateStatusUseCase {
     if (!user) throw new UserNotFoundError()
 
     const existing = user.statuses.find(s => s.id === input.statusId)
-    if (!existing) throw new Error('Status not found')
+    if (!existing) throw new NotFoundError('Status')
 
     const updated: StatusRecord = {
       ...existing,

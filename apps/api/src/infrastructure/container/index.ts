@@ -126,9 +126,9 @@ export const containerPlugin = fp(async (app: FastifyInstance) => {
       getMe: new GetMeUseCase(userRepo),
     },
     task: {
-      createTask: new CreateTaskUseCase(taskRepo),
+      createTask: new CreateTaskUseCase(taskRepo, userRepo),
       getTasks: new GetTasksUseCase(taskRepo),
-      updateTask: new UpdateTaskUseCase(taskRepo),
+      updateTask: new UpdateTaskUseCase(taskRepo, userRepo),
       deleteTask: new DeleteTaskUseCase(taskRepo),
     },
     status: {
@@ -144,10 +144,10 @@ export const containerPlugin = fp(async (app: FastifyInstance) => {
       deleteFolder: new DeleteFolderUseCase(folderRepo),
     },
     note: {
-      createNote: new CreateNoteUseCase(noteRepo),
+      createNote: new CreateNoteUseCase(noteRepo, folderRepo),
       getNotes: new GetNotesUseCase(noteRepo),
       getNote: new GetNoteUseCase(noteRepo),
-      updateNote: new UpdateNoteUseCase(noteRepo),
+      updateNote: new UpdateNoteUseCase(noteRepo, folderRepo),
       deleteNote: new DeleteNoteUseCase(noteRepo),
     },
     linkCategory: {
@@ -157,9 +157,9 @@ export const containerPlugin = fp(async (app: FastifyInstance) => {
       deleteLinkCategory: new DeleteLinkCategoryUseCase(linkCategoryRepo),
     },
     link: {
-      createLink: new CreateLinkUseCase(linkRepo),
+      createLink: new CreateLinkUseCase(linkRepo, linkCategoryRepo),
       getLinks: new GetLinksUseCase(linkRepo),
-      updateLink: new UpdateLinkUseCase(linkRepo),
+      updateLink: new UpdateLinkUseCase(linkRepo, linkCategoryRepo),
       deleteLink: new DeleteLinkUseCase(linkRepo),
     },
     credential: {

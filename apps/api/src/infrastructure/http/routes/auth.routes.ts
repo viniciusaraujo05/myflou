@@ -1,7 +1,7 @@
 import type { FastifyInstance } from 'fastify'
 import { RegisterBodySchema, LoginBodySchema } from '../schemas/auth.http-schema.js'
 
-const ACCESS_MAX_AGE  = 60 * 60            // 1 hour in seconds
+const ACCESS_MAX_AGE  = 15 * 60            // 15 minutes in seconds
 const REFRESH_MAX_AGE = 7 * 24 * 60 * 60  // 7 days in seconds
 
 function cookieOptions(maxAge: number) {

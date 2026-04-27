@@ -17,6 +17,7 @@ export class RefreshUseCase {
 
   async execute(rawRefreshToken: string | undefined): Promise<RefreshOutput> {
     if (!rawRefreshToken) throw new MissingTokenError()
+    await this.refreshTokenRepo.deleteExpired(new Date())
 
     const prefix = rawRefreshToken.slice(0, 16)
     const candidates = await this.refreshTokenRepo.findByPrefix(prefix)

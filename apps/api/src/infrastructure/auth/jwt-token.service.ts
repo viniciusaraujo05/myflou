@@ -6,7 +6,7 @@ export class JwtTokenService implements ITokenService {
   constructor(private readonly fastify: FastifyInstance) {}
 
   signAccessToken(payload: TokenPayload): string {
-    return this.fastify.jwt.sign(payload, { expiresIn: '1h' })
+    return this.fastify.jwt.sign(payload)
   }
 
   verifyAccessToken(token: string): TokenPayload {

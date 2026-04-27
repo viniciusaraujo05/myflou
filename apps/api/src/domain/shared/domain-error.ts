@@ -19,3 +19,21 @@ export function isDomainError(err: unknown): err is DomainError {
     (err as DomainError).isDomainError === true
   )
 }
+
+export class NotFoundError extends DomainError {
+  constructor(resource = 'Resource') {
+    super(`${resource} not found`, 'NOT_FOUND')
+  }
+}
+
+export class AccessDeniedError extends DomainError {
+  constructor() {
+    super('You do not have permission to access this resource', 'ACCESS_DENIED')
+  }
+}
+
+export class InvalidRelationError extends DomainError {
+  constructor(resource = 'Related resource') {
+    super(`${resource} is invalid`, 'INVALID_RELATION')
+  }
+}

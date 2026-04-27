@@ -1,5 +1,7 @@
 import type { ILinkRepository } from '../../domain/link/link.repository.js'
+import type { ILinkCategoryRepository } from '../../domain/link-category/link-category.repository.js'
 import type { LinkDTO } from '../../domain/link/link.entity.js'
+import { InvalidRelationError, NotFoundError } from '../../domain/shared/domain-error.js'
 
 interface Input {
   linkId: string
@@ -13,11 +15,19 @@ interface Input {
 }
 
 export class UpdateLinkUseCase {
-  constructor(private readonly linkRepo: ILinkRepository) {}
+  constructor(
+    private readonly linkRepo: ILinkRepository,
+    private readonly linkCategoryRepo: ILinkCategoryRepository,
+  ) {}
 
   async execute(input: Input): Promise<LinkDTO> {
     const link = await this.linkRepo.findById(input.linkId)
-    if (!link || link.userId !== input.userId) throw new Error('Not found')
+    if (!link || link.userId !== input.userId) throw new NotFoundError('Link')
+
+    if (input.categoryId) {
+      const category = await this.linkCategoryRepo.findById(input.categoryId)
+      if (!category || category.userId !== input.userId) throw new InvalidRelationError('Link category')
+    }
 
     const data: { title?: string; url?: string; description?: string | null; username?: string | null; password?: string | null; categoryId?: string | null } = {}
     if (input.title !== undefined) data.title = input.title
