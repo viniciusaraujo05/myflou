@@ -1,13 +1,14 @@
 .tiptap {
   outline: none;
   min-height: 400px;
-  font-size: 14.5px;
-  line-height: 1.75;
+  font-size: 15px;
+  line-height: 1.72;
   color: var(--text);
+  padding-bottom: 35vh;
 }
 
 .tiptap p {
-  margin: 0 0 8px;
+  margin: 0 0 6px;
 }
 
 .tiptap p.is-editor-empty:first-child::before {
@@ -18,20 +19,20 @@
   height: 0;
 }
 
-.tiptap h1 { font-size: 26px; font-weight: 700; margin: 24px 0 8px; letter-spacing: -0.4px; line-height: 1.25; }
-.tiptap h2 { font-size: 20px; font-weight: 600; margin: 20px 0 6px; letter-spacing: -0.2px; }
-.tiptap h3 { font-size: 16px; font-weight: 600; margin: 16px 0 4px; }
+.tiptap h1 { font-size: 30px; font-weight: 700; margin: 30px 0 10px; letter-spacing: 0; line-height: 1.2; }
+.tiptap h2 { font-size: 22px; font-weight: 650; margin: 24px 0 8px; letter-spacing: 0; line-height: 1.25; }
+.tiptap h3 { font-size: 17px; font-weight: 650; margin: 18px 0 6px; letter-spacing: 0; }
 
 .tiptap ul,
-.tiptap ol { padding-left: 20px; margin: 6px 0; }
-.tiptap li { margin: 2px 0; }
+.tiptap ol { padding-left: 22px; margin: 6px 0 10px; }
+.tiptap li { margin: 3px 0; padding-left: 2px; }
 
 .tiptap blockquote {
-  border-left: 3px solid var(--accent);
-  margin: 12px 0;
-  padding: 4px 0 4px 16px;
+  border-left: 3px solid var(--bg3);
+  margin: 14px 0;
+  padding: 6px 0 6px 16px;
   color: var(--text2);
-  font-style: italic;
+  background: transparent;
 }
 
 .tiptap code {
@@ -44,10 +45,11 @@
 }
 
 .tiptap pre {
-  background: var(--bg3);
-  border-radius: 10px;
-  padding: 14px 16px;
-  margin: 12px 0;
+  background: var(--bg2);
+  border: 1px solid var(--divider);
+  border-radius: 12px;
+  padding: 15px 16px;
+  margin: 14px 0;
   overflow-x: auto;
 }
 
@@ -67,25 +69,33 @@
 .tiptap hr {
   border: none;
   border-top: 1px solid var(--divider);
-  margin: 20px 0;
+  margin: 24px 0;
 }
 
 /* Task list */
 .tiptap ul[data-type="taskList"] {
   list-style: none;
   padding: 0;
+  margin: 8px 0 12px;
 }
 
 .tiptap ul[data-type="taskList"] li {
   display: flex;
   align-items: flex-start;
-  gap: 8px;
+  gap: 9px;
+  margin: 5px 0;
 }
 
 .tiptap ul[data-type="taskList"] li > label {
   user-select: none;
   flex-shrink: 0;
-  margin-top: 3px;
+  margin-top: 2px;
+}
+
+.tiptap ul[data-type="taskList"] input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent);
 }
 
 .tiptap ul[data-type="taskList"] li > div {
@@ -99,14 +109,15 @@
 
 .tiptap a {
   color: var(--accent);
-  text-decoration: underline;
+  text-decoration: none;
+  border-bottom: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
 }
 
 .tiptap img {
   max-width: 100%;
   height: auto;
-  border-radius: 10px;
-  margin: 8px 0;
+  border-radius: 12px;
+  margin: 12px 0;
   display: block;
 }
 

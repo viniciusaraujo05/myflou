@@ -127,49 +127,81 @@ export default function NotesPage() {
   const filteredNotes = search
     ? notes.filter(n => n.title.toLowerCase().includes(search.toLowerCase()))
     : notes
+  const selectedFolder = folders.find(f => f.id === selectedFolderId)
 
   return (
-    <div className="flex flex-1 overflow-hidden">
+    <div className="flex flex-1 overflow-hidden rounded-2xl" style={{ background: 'var(--bg)' }}>
       {/* Sidebar */}
-      <aside style={{ width: 240, display: 'flex', flexDirection: 'column', borderRight: '1px solid var(--divider)', background: 'var(--bg2)', flexShrink: 0 }}>
-        {/* Search */}
-        <div style={{ padding: '16px 14px 10px' }}>
+      <aside
+        className="hidden shrink-0 flex-col overflow-hidden md:flex"
+        style={{ width: 260, borderRight: '1px solid var(--divider)', background: 'var(--bg2)' }}
+      >
+        <div style={{ padding: '18px 14px 12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+            <div>
+              <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.12em', color: 'var(--text3)', textTransform: 'uppercase' }}>
+                Workspace
+              </div>
+              <h2 className="font-serif" style={{ margin: '2px 0 0', fontSize: 22, fontWeight: 400, color: 'var(--text)' }}>
+                Notes
+              </h2>
+            </div>
+            <button
+              onClick={createNote}
+              disabled={creating}
+              aria-label="New note"
+              title="New note"
+              style={{
+                width: 34, height: 34, borderRadius: 11, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                background: 'var(--accent)', color: '#fff', cursor: 'pointer', opacity: creating ? 0.6 : 1, border: 'none',
+              }}
+            >
+              <svg width="15" height="15" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <path d="M10 4v12M4 10h12" />
+              </svg>
+            </button>
+          </div>
+
           <input
             type="text"
-            placeholder="Search notes…"
+            placeholder="Search pages"
             value={search}
             onChange={e => setSearch(e.target.value)}
             style={{
-              width: '100%', fontSize: 12, padding: '7px 10px', borderRadius: 8,
+              width: '100%', fontSize: 13, padding: '9px 11px', borderRadius: 10,
               border: '1.5px solid var(--divider)', background: 'var(--bg)',
               color: 'var(--text)', outline: 'none', boxSizing: 'border-box',
             }}
             onFocus={e => (e.target.style.borderColor = 'var(--accent)')}
             onBlur={e => (e.target.style.borderColor = 'var(--divider)')}
           />
-        </div>
-
-        {/* Folders */}
-        <div style={{ padding: '0 14px 8px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-            <span style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.1em', color: 'var(--text3)', textTransform: 'uppercase' }}>Folders</span>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '18px 0 8px' }}>
+            <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.12em', color: 'var(--text3)', textTransform: 'uppercase' }}>Folders</span>
             <button
               onClick={() => setFolderDialog({ open: true })}
-              style={{ fontSize: 16, color: 'var(--text3)', cursor: 'pointer', lineHeight: 1, padding: 2 }}
+              style={{ width: 24, height: 24, borderRadius: 8, color: 'var(--text3)', cursor: 'pointer', background: 'transparent', border: 'none' }}
               title="New folder"
-            >+</button>
+              aria-label="New folder"
+            >
+              <svg width="13" height="13" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <path d="M10 4v12M4 10h12" />
+              </svg>
+            </button>
           </div>
 
-          {/* All notes */}
           <button
             onClick={() => { setSelectedFolderId(null); setSearch('') }}
             style={{
-              width: '100%', display: 'flex', alignItems: 'center', gap: 8, padding: '6px 8px', borderRadius: 7, cursor: 'pointer', marginBottom: 2,
+              width: '100%', display: 'flex', alignItems: 'center', gap: 8, padding: '8px 9px', borderRadius: 10, cursor: 'pointer', marginBottom: 3,
               background: selectedFolderId === null && !search ? 'var(--bg3)' : 'transparent',
               border: 'none', color: selectedFolderId === null && !search ? 'var(--text)' : 'var(--text2)', fontSize: 13, fontWeight: 500,
             }}
           >
-            <span style={{ fontSize: 14 }}>📄</span> All notes
+            <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6">
+              <path d="M4 3h12v14H4z" /><path d="M7 7h6M7 10h6M7 13h4" />
+            </svg>
+            <span style={{ flex: 1, textAlign: 'left' }}>All pages</span>
+            <span style={{ fontSize: 11, color: 'var(--text3)' }}>{notes.length}</span>
           </button>
 
           {folders.map(folder => (
@@ -177,7 +209,7 @@ export default function NotesPage() {
               <button
                 onClick={() => { setSelectedFolderId(folder.id); setSearch('') }}
                 style={{
-                  flex: 1, display: 'flex', alignItems: 'center', gap: 8, padding: '6px 8px', borderRadius: 7, cursor: 'pointer',
+                  flex: 1, display: 'flex', alignItems: 'center', gap: 8, padding: '8px 9px', borderRadius: 10, cursor: 'pointer',
                   background: selectedFolderId === folder.id ? 'var(--bg3)' : 'transparent',
                   border: 'none', color: selectedFolderId === folder.id ? 'var(--text)' : 'var(--text2)', fontSize: 13,
                 }}
@@ -187,24 +219,31 @@ export default function NotesPage() {
               </button>
               <button
                 onClick={() => setFolderDialog({ open: true, folder })}
-                style={{ padding: '4px 5px', borderRadius: 5, fontSize: 11, color: 'var(--text3)', cursor: 'pointer', background: 'transparent', border: 'none', opacity: 0.6 }}
+                style={{ padding: '5px 6px', borderRadius: 7, fontSize: 11, color: 'var(--text3)', cursor: 'pointer', background: 'transparent', border: 'none', opacity: 0.7 }}
                 title="Edit folder"
-              >✎</button>
+                aria-label="Edit folder"
+              >
+                <svg width="12" height="12" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7">
+                  <path d="M4 13.5V16h2.5L15 7.5 12.5 5 4 13.5z" />
+                </svg>
+              </button>
             </div>
           ))}
         </div>
 
         {/* Notes list */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '0 10px 16px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 4px 8px' }}>
-            <span style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.1em', color: 'var(--text3)', textTransform: 'uppercase' }}>Notes</span>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 4px 8px' }}>
+            <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.12em', color: 'var(--text3)', textTransform: 'uppercase' }}>
+              {selectedFolder ? selectedFolder.name : 'Pages'}
+            </span>
             <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
               {notes.length > 0 && (
                 <button
                   onClick={exportFolderToPdf}
                   disabled={exportingFolder}
                   title={selectedFolderId ? 'Export folder to PDF' : 'Export all notes to PDF'}
-                  style={{ fontSize: 11, color: 'var(--text3)', cursor: 'pointer', padding: '2px 5px', opacity: exportingFolder ? 0.5 : 1, background: 'none', border: 'none' }}
+                  style={{ width: 26, height: 26, borderRadius: 8, color: 'var(--text3)', cursor: 'pointer', opacity: exportingFolder ? 0.5 : 1, background: 'transparent', border: 'none' }}
                 >
                   {exportingFolder ? '…' : (
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -219,9 +258,14 @@ export default function NotesPage() {
               <button
                 onClick={createNote}
                 disabled={creating}
-                style={{ fontSize: 16, color: 'var(--accent)', cursor: 'pointer', lineHeight: 1, padding: 2, opacity: creating ? 0.5 : 1, background: 'none', border: 'none' }}
+                style={{ width: 26, height: 26, borderRadius: 8, color: 'var(--accent)', cursor: 'pointer', opacity: creating ? 0.5 : 1, background: 'transparent', border: 'none' }}
                 title="New note"
-              >+</button>
+                aria-label="New note"
+              >
+                <svg width="13" height="13" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <path d="M10 4v12M4 10h12" />
+                </svg>
+              </button>
             </div>
           </div>
 
@@ -239,13 +283,14 @@ export default function NotesPage() {
                 key={note.id}
                 onClick={() => openNote(note)}
                 style={{
-                  width: '100%', textAlign: 'left', padding: '8px 10px', borderRadius: 8, cursor: 'pointer', marginBottom: 2,
-                  background: isSelected ? 'var(--accent-bg)' : 'transparent',
-                  border: `1.5px solid ${isSelected ? 'var(--accent)' : 'transparent'}`,
+                  width: '100%', textAlign: 'left', padding: '10px 11px', borderRadius: 11, cursor: 'pointer', marginBottom: 3,
+                  background: isSelected ? 'var(--bg)' : 'transparent',
+                  border: `1px solid ${isSelected ? 'var(--divider)' : 'transparent'}`,
                   color: 'var(--text)',
+                  boxShadow: isSelected ? '0 1px 3px rgba(28,24,20,0.04)' : 'none',
                 }}
               >
-                <div style={{ fontSize: 13, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: 2 }}>
+                <div style={{ fontSize: 13, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: 4 }}>
                   {note.title || 'Untitled'}
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -262,6 +307,25 @@ export default function NotesPage() {
 
       {/* Editor */}
       <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <div
+          className="flex shrink-0 items-center justify-between gap-3 border-b px-4 py-3 md:hidden"
+          style={{ borderColor: 'var(--divider)', background: 'var(--bg2)' }}
+        >
+          <div>
+            <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.12em', color: 'var(--text3)', textTransform: 'uppercase' }}>
+              Notes
+            </div>
+            <p className="text-[13px] text-[var(--text2)]">{filteredNotes.length} page{filteredNotes.length === 1 ? '' : 's'}</p>
+          </div>
+          <button
+            onClick={createNote}
+            disabled={creating}
+            className="rounded-xl px-3 py-2 text-[12px] font-semibold text-white"
+            style={{ background: 'var(--accent)', opacity: creating ? 0.6 : 1 }}
+          >
+            New page
+          </button>
+        </div>
         {selectedNote ? (
           <NoteEditor
             key={selectedNote.id}

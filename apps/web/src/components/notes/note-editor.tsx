@@ -19,6 +19,7 @@ interface NoteEditorProps {
 export function NoteEditor({ note, folders, onChange, onDelete, onFolderChange }: NoteEditorProps) {
   const [title, setTitle] = useState(note.title)
   const [showFolderMenu, setShowFolderMenu] = useState(false)
+  const [showInsertMenu, setShowInsertMenu] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const imageInputRef = useRef<HTMLInputElement>(null)
   const currentFolder = folders.find(f => f.id === note.folderId)
@@ -67,10 +68,23 @@ export function NoteEditor({ note, folders, onChange, onDelete, onFolderChange }
     printNotes([{ title, html: editor.getHTML() }])
   }
 
+  function insertBlock(kind: 'h1' | 'h2' | 'todo' | 'quote' | 'code' | 'divider' | 'image') {
+    setShowInsertMenu(false)
+    if (!editor) return
+
+    if (kind === 'h1') editor.chain().focus().toggleHeading({ level: 1 }).run()
+    if (kind === 'h2') editor.chain().focus().toggleHeading({ level: 2 }).run()
+    if (kind === 'todo') editor.chain().focus().toggleTaskList().run()
+    if (kind === 'quote') editor.chain().focus().toggleBlockquote().run()
+    if (kind === 'code') editor.chain().focus().toggleCodeBlock().run()
+    if (kind === 'divider') editor.chain().focus().setHorizontalRule().run()
+    if (kind === 'image') imageInputRef.current?.click()
+  }
+
   if (!editor) return null
 
   return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'var(--bg)' }}>
       {/* Hidden image file input */}
       <input
         ref={imageInputRef}
@@ -82,10 +96,51 @@ export function NoteEditor({ note, folders, onChange, onDelete, onFolderChange }
 
       {/* Toolbar */}
       <div style={{
-        display: 'flex', alignItems: 'center', gap: 2, padding: '10px 24px',
+        display: 'flex', alignItems: 'center', gap: 4, padding: '10px 18px',
         borderBottom: '1px solid var(--divider)', flexWrap: 'wrap',
-        background: 'var(--bg2)',
+        background: 'var(--bg)',
       }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0, marginRight: 8 }}>
+          {currentFolder && <span style={{ width: 8, height: 8, borderRadius: '50%', background: currentFolder.color, flexShrink: 0 }} />}
+          <span style={{ fontSize: 12, color: 'var(--text3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {currentFolder ? currentFolder.name : 'Private page'}
+          </span>
+        </div>
+
+        <Divider />
+
+        <div style={{ position: 'relative' }}>
+          <button
+            onClick={() => setShowInsertMenu(v => !v)}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 6, padding: '5px 10px', borderRadius: 8, cursor: 'pointer',
+              border: '1px solid var(--divider)', background: 'var(--bg2)', fontSize: 12, color: 'var(--text2)',
+            }}
+          >
+            <svg width="13" height="13" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <path d="M10 4v12M4 10h12" />
+            </svg>
+            Insert
+          </button>
+          {showInsertMenu && (
+            <div style={{
+              position: 'absolute', left: 0, top: '100%', marginTop: 6, zIndex: 60,
+              width: 220, background: 'var(--bg)', border: '1px solid var(--divider)', borderRadius: 12,
+              boxShadow: '0 16px 40px rgba(28,24,20,0.12)', padding: 6,
+            }}>
+              <InsertOption title="Heading 1" detail="Large section title" onClick={() => insertBlock('h1')} />
+              <InsertOption title="Heading 2" detail="Medium section title" onClick={() => insertBlock('h2')} />
+              <InsertOption title="To-do list" detail="Track actionable items" onClick={() => insertBlock('todo')} />
+              <InsertOption title="Quote" detail="Callout text block" onClick={() => insertBlock('quote')} />
+              <InsertOption title="Code block" detail="Snippet or command" onClick={() => insertBlock('code')} />
+              <InsertOption title="Divider" detail="Separate sections" onClick={() => insertBlock('divider')} />
+              <InsertOption title="Image" detail="Upload from device" onClick={() => insertBlock('image')} />
+            </div>
+          )}
+        </div>
+
+        <Divider />
+
         <ToolbarGroup>
           <ToolBtn active={editor.isActive('bold')} onClick={() => editor.chain().focus().toggleBold().run()} title="Bold (⌘B)">
             <b>B</b>
@@ -162,7 +217,6 @@ export function NoteEditor({ note, folders, onChange, onDelete, onFolderChange }
           )
         })()}
 
-        {/* Spacer */}
         <div style={{ flex: 1 }} />
 
         {/* Export PDF */}
@@ -226,8 +280,8 @@ export function NoteEditor({ note, folders, onChange, onDelete, onFolderChange }
       </div>
 
       {/* Content area */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '32px 40px' }}>
-        <div style={{ maxWidth: 720, margin: '0 auto' }}>
+      <div style={{ flex: 1, overflowY: 'auto', padding: '34px clamp(20px, 6vw, 72px)' }}>
+        <div style={{ maxWidth: 820, margin: '0 auto' }}>
           {/* Title */}
           <input
             type="text"
@@ -236,9 +290,9 @@ export function NoteEditor({ note, folders, onChange, onDelete, onFolderChange }
             onKeyDown={handleTitleKeyDown}
             placeholder="Untitled"
             style={{
-              width: '100%', fontSize: 30, fontWeight: 700, letterSpacing: '-0.5px',
+              width: '100%', fontSize: 42, fontWeight: 700, letterSpacing: '0',
               border: 'none', outline: 'none', background: 'transparent',
-              color: 'var(--text)', marginBottom: 24, lineHeight: 1.2,
+              color: 'var(--text)', marginBottom: 18, lineHeight: 1.12,
               fontFamily: 'var(--font-serif, Georgia, serif)',
             }}
           />
@@ -268,13 +322,29 @@ function ToolBtn({ active, onClick, title, children }: {
       title={title}
       style={{
         display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-        minWidth: 28, height: 26, padding: '0 6px', borderRadius: 5, cursor: 'pointer',
+        minWidth: 29, height: 28, padding: '0 7px', borderRadius: 7, cursor: 'pointer',
         border: 'none', fontSize: 12, fontWeight: 600,
         background: active ? 'var(--accent-bg)' : 'transparent',
         color: active ? 'var(--accent)' : 'var(--text2)',
       }}
     >
       {children}
+    </button>
+  )
+}
+
+function InsertOption({ title, detail, onClick }: { title: string; detail: string; onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        width: '100%', display: 'flex', flexDirection: 'column', gap: 1, textAlign: 'left',
+        padding: '8px 10px', borderRadius: 9, border: 'none', background: 'transparent',
+        cursor: 'pointer', color: 'var(--text)',
+      }}
+    >
+      <span style={{ fontSize: 13, fontWeight: 600 }}>{title}</span>
+      <span style={{ fontSize: 11, color: 'var(--text3)' }}>{detail}</span>
     </button>
   )
 }
