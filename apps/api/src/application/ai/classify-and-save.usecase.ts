@@ -19,6 +19,10 @@ export interface ClassifyResult {
   created: SavedItem[]
 }
 
+export interface ClassifyPreviewResult {
+  items: ClassifiedItem[]
+}
+
 function textToTiptap(text: string) {
   const lines = text.split('\n')
   return {
@@ -165,8 +169,7 @@ export class ClassifyAndSaveUseCase {
     private readonly credentialRepo: ICredentialRepository,
   ) {}
 
-  async execute(userId: string, text: string): Promise<ClassifyResult> {
-    // Build context from the user's existing data
+  async preview(userId: string, text: string): Promise<ClassifyPreviewResult> {
     const [folders, recentNotes, categories] = await Promise.all([
       this.folderRepo.findByUser(userId),
       this.noteRepo.findByUser(userId),
@@ -200,41 +203,70 @@ export class ClassifyAndSaveUseCase {
       }
     }
 
+    const folderIds = new Set(folders.map(f => f.id))
+    const categoryIds = new Set(categories.map(c => c.id))
+
+    return {
+      items: items
+        .map(item => {
+          if (item.type === 'note') {
+            return { ...item, folderId: item.folderId && folderIds.has(item.folderId) ? item.folderId : null }
+          }
+          if (item.type === 'link') {
+            return { ...item, categoryId: item.categoryId && categoryIds.has(item.categoryId) ? item.categoryId : null }
+          }
+          return item
+        })
+        .filter(item => {
+          if (item.type === 'note') return Boolean(item.title?.trim() || item.content?.trim())
+          if (item.type === 'task') return Boolean(item.title?.trim() && item.date)
+          if (item.type === 'link') return Boolean(item.url?.trim() && item.title?.trim())
+          if (item.type === 'credential') return Boolean(item.service?.trim() && item.password)
+          return false
+        }),
+    }
+  }
+
+  async save(userId: string, items: ClassifiedItem[]): Promise<ClassifyResult> {
+    const [folders, categories] = await Promise.all([
+      this.folderRepo.findByUser(userId),
+      this.linkCategoryRepo.findByUser(userId),
+    ])
     const created: SavedItem[] = []
 
     for (const item of items) {
       try {
         if (item.type === 'note') {
           if (item.folderId && !folders.some(f => f.id === item.folderId)) continue
-          const note = await this.noteRepo.create(userId, item.title || 'Untitled', item.folderId ?? null)
+          const note = await this.noteRepo.create(userId, item.title?.trim() || 'Untitled', item.folderId ?? null)
           if (item.content) {
             await this.noteRepo.update(note.id, { content: textToTiptap(item.content) })
           }
-          created.push({ type: 'note', id: note.id, title: item.title || 'Untitled' })
+          created.push({ type: 'note', id: note.id, title: item.title?.trim() || 'Untitled' })
         } else if (item.type === 'task') {
           const date = new Date(`${item.date}T00:00:00.000Z`)
-          const task = await this.taskRepo.create(userId, item.title, date, item.description ?? null)
-          created.push({ type: 'task', id: task.id, title: item.title, date: item.date })
+          const task = await this.taskRepo.create(userId, item.title.trim(), date, item.description ?? null)
+          created.push({ type: 'task', id: task.id, title: item.title.trim(), date: item.date })
         } else if (item.type === 'link') {
           if (item.categoryId && !categories.some(c => c.id === item.categoryId)) continue
           const link = await this.linkRepo.create(userId, {
-            title: item.title,
-            url: item.url,
+            title: item.title.trim(),
+            url: item.url.trim(),
             description: item.description ?? null,
             username: item.username ?? null,
             password: item.password ?? null,
             categoryId: item.categoryId ?? null,
           })
-          created.push({ type: 'link', id: link.id, title: item.title, url: item.url })
+          created.push({ type: 'link', id: link.id, title: item.title.trim(), url: item.url.trim() })
         } else if (item.type === 'credential') {
           const cred = await this.credentialRepo.create(userId, {
-            service: item.service,
-            username: item.username,
+            service: item.service.trim(),
+            username: item.username ?? '',
             password: item.password,
             url: item.url ?? null,
             notes: item.notes ?? null,
           })
-          created.push({ type: 'credential', id: cred.id, title: item.service })
+          created.push({ type: 'credential', id: cred.id, title: item.service.trim(), url: item.url ?? undefined })
         }
       } catch {
         // Skip items that fail (e.g. invalid date) and continue
@@ -242,5 +274,10 @@ export class ClassifyAndSaveUseCase {
     }
 
     return { created }
+  }
+
+  async execute(userId: string, text: string): Promise<ClassifyResult> {
+    const preview = await this.preview(userId, text)
+    return this.save(userId, preview.items)
   }
 }

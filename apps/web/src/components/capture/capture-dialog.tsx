@@ -16,12 +16,18 @@ interface CaptureResult {
   created: SavedItem[]
 }
 
+type PreviewItem =
+  | { type: 'note'; title: string; content: string; folderId: string | null }
+  | { type: 'task'; title: string; date: string; description: string | null }
+  | { type: 'link'; url: string; title: string; description: string | null; categoryId: string | null; username: string | null; password: string | null }
+  | { type: 'credential'; service: string; username: string; password: string; url: string | null; notes: string | null }
+
 interface CaptureDialogProps {
   open: boolean
   onClose: () => void
 }
 
-const TYPE_ICONS: Record<SavedItem['type'], string> = {
+const TYPE_ICONS: Record<SavedItem['type'] | PreviewItem['type'], string> = {
   note: '📝',
   task: '✅',
   link: '🔗',
@@ -38,6 +44,8 @@ const TYPE_LABELS: Record<SavedItem['type'], string> = {
 export function CaptureDialog({ open, onClose }: CaptureDialogProps) {
   const [text, setText] = useState('')
   const [loading, setLoading] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [preview, setPreview] = useState<PreviewItem[] | null>(null)
   const [result, setResult] = useState<CaptureResult | null>(null)
   const [error, setError] = useState('')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -45,6 +53,7 @@ export function CaptureDialog({ open, onClose }: CaptureDialogProps) {
   useEffect(() => {
     if (open) {
       setText('')
+      setPreview(null)
       setResult(null)
       setError('')
       setTimeout(() => textareaRef.current?.focus(), 50)
@@ -57,6 +66,7 @@ export function CaptureDialog({ open, onClose }: CaptureDialogProps) {
     setLoading(true)
     setError('')
     setResult(null)
+    setPreview(null)
     try {
       const res = await apiFetch('/api/ai', {
         method: 'POST',
@@ -68,13 +78,40 @@ export function CaptureDialog({ open, onClose }: CaptureDialogProps) {
         setError((err as { message?: string }).message || 'Failed to classify content')
         return
       }
-      const data: CaptureResult = await res.json()
-      setResult(data)
-      if (data.created.length > 0) setText('')
+      const data: { items?: PreviewItem[] } = await res.json()
+      const items = data.items ?? []
+      setPreview(items)
+      if (items.length === 0) setResult({ created: [] })
     } catch {
       setError('Something went wrong. Please try again.')
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function handleSave() {
+    if (!preview?.length) return
+    setSaving(true)
+    setError('')
+    try {
+      const res = await apiFetch('/api/ai/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ items: preview }),
+      })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        setError((err as { message?: string }).message || 'Failed to save selected items')
+        return
+      }
+      const data: CaptureResult = await res.json()
+      setResult(data)
+      setPreview(null)
+      if (data.created.length > 0) setText('')
+    } catch {
+      setError('Something went wrong. Please try again.')
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -131,7 +168,12 @@ export function CaptureDialog({ open, onClose }: CaptureDialogProps) {
             <textarea
               ref={textareaRef}
               value={text}
-              onChange={e => { setText(e.target.value); setResult(null); setError('') }}
+              onChange={e => {
+                setText(e.target.value)
+                setPreview(null)
+                setResult(null)
+                setError('')
+              }}
               onKeyDown={handleKeyDown}
               placeholder={`Dump everything here — thoughts, links, passwords, tasks...\n\nExamples:\n• "Call dentist on May 5th"\n• "https://github.com/user/repo — user: john, pass: abc123"\n• "Meeting notes: discussed Q3 roadmap..."\n• Mix it all! AI will sort it out.`}
               rows={7}
@@ -144,18 +186,19 @@ export function CaptureDialog({ open, onClose }: CaptureDialogProps) {
               }}
               onFocus={e => (e.target.style.borderColor = 'var(--accent)')}
               onBlur={e => (e.target.style.borderColor = 'var(--divider)')}
-              disabled={loading}
+              disabled={loading || saving}
             />
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 10 }}>
               <span style={{ fontSize: 11, color: 'var(--text3)' }}>⌘↵ to send</span>
               <button
                 onClick={handleClassify}
-                disabled={!hasContent || loading}
+                disabled={!hasContent || loading || saving}
                 style={{
                   display: 'flex', alignItems: 'center', gap: 7,
                   padding: '8px 18px', borderRadius: 10, fontSize: 13, fontWeight: 600,
-                  background: 'var(--accent)', color: '#fff', cursor: hasContent && !loading ? 'pointer' : 'not-allowed',
-                  opacity: hasContent && !loading ? 1 : 0.45,
+                  background: 'var(--accent)', color: '#fff',
+                  cursor: hasContent && !loading && !saving ? 'pointer' : 'not-allowed',
+                  opacity: hasContent && !loading && !saving ? 1 : 0.45,
                   border: 'none',
                 }}
               >
@@ -165,7 +208,7 @@ export function CaptureDialog({ open, onClose }: CaptureDialogProps) {
                   </>
                 ) : (
                   <>
-                    <SparkleIcon white /> Classify & Save
+                    <SparkleIcon white /> Review with AI
                   </>
                 )}
               </button>
@@ -176,6 +219,59 @@ export function CaptureDialog({ open, onClose }: CaptureDialogProps) {
           {error && (
             <div style={{ margin: '0 20px 16px', padding: '10px 14px', borderRadius: 10, background: '#fef2f2', border: '1px solid #fecaca' }}>
               <p style={{ fontSize: 12.5, color: '#dc2626', margin: 0 }}>{error}</p>
+            </div>
+          )}
+
+          {preview && preview.length > 0 && (
+            <div style={{ borderTop: '1px solid var(--divider)', padding: '14px 20px 18px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center', marginBottom: 10 }}>
+                <div>
+                  <p style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--text3)', margin: 0 }}>
+                    Review before saving
+                  </p>
+                  <p style={{ fontSize: 12, color: 'var(--text2)', margin: '4px 0 0' }}>Remove anything wrong before confirming.</p>
+                </div>
+                <button
+                  onClick={handleSave}
+                  disabled={saving}
+                  style={{
+                    padding: '8px 12px', borderRadius: 10, fontSize: 12, fontWeight: 600,
+                    background: 'var(--accent)', color: '#fff', border: 'none', opacity: saving ? 0.55 : 1,
+                  }}
+                >
+                  {saving ? 'Saving...' : `Save ${preview.length}`}
+                </button>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {preview.map((item, i) => (
+                  <div key={i} style={{
+                    display: 'flex', alignItems: 'center', gap: 10,
+                    padding: '8px 12px', borderRadius: 9,
+                    background: 'var(--bg2)', border: '1px solid var(--divider)',
+                  }}>
+                    <span style={{ fontSize: 16 }}>{TYPE_ICONS[item.type]}</span>
+                    <div style={{ flex: 1, overflow: 'hidden' }}>
+                      <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {item.type === 'credential' ? item.service : item.title}
+                      </div>
+                      <div style={{ fontSize: 11, color: 'var(--text3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {TYPE_LABELS[item.type]}
+                        {item.type === 'task' && ` · ${item.date}`}
+                        {item.type === 'link' && ` · ${item.url}`}
+                        {item.type === 'credential' && item.username && ` · ${item.username}`}
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setPreview(prev => prev ? prev.filter((_, index) => index !== i) : prev)}
+                      disabled={saving}
+                      style={{ width: 28, height: 28, borderRadius: 8, border: '1px solid var(--divider)', background: 'var(--bg)', color: 'var(--text3)' }}
+                      aria-label="Reject item"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 

@@ -22,6 +22,19 @@ interface CaptureCreated {
   url?: string
 }
 
+type CapturePreviewItem =
+  | { type: 'note'; title: string; content: string; folderId: string | null }
+  | { type: 'task'; title: string; date: string; description: string | null }
+  | { type: 'link'; url: string; title: string; description: string | null; categoryId: string | null; username: string | null; password: string | null }
+  | { type: 'credential'; service: string; username: string; password: string; url: string | null; notes: string | null }
+
+const PREVIEW_LABELS: Record<CapturePreviewItem['type'], string> = {
+  note: 'Note',
+  task: 'Task',
+  link: 'Link',
+  credential: 'Password',
+}
+
 const widgetBase: CSSProperties = {
   border: '1px solid var(--divider)',
   borderRadius: 18,
@@ -160,6 +173,8 @@ export function HomeView({
   const [credentials, setCredentials] = useState<Credential[]>(initialCredentials)
   const [captureVal, setCaptureVal] = useState('')
   const [captureLoading, setCaptureLoading] = useState(false)
+  const [captureSaving, setCaptureSaving] = useState(false)
+  const [capturePreview, setCapturePreview] = useState<CapturePreviewItem[] | null>(null)
   const [captureResult, setCaptureResult] = useState<CaptureCreated[] | null>(null)
   const [captureError, setCaptureError] = useState('')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -195,6 +210,7 @@ export function HomeView({
 
     setCaptureLoading(true)
     setCaptureResult(null)
+    setCapturePreview(null)
     setCaptureError('')
 
     try {
@@ -206,62 +222,105 @@ export function HomeView({
 
       const data = await res.json().catch(() => ({}))
       if (!res.ok) {
-        setCaptureError((data as { message?: string }).message || 'Could not save this capture.')
+        setCaptureError((data as { message?: string }).message || 'Could not analyze this capture.')
+        return
+      }
+
+      const items = (data as { items?: CapturePreviewItem[] }).items ?? []
+      setCapturePreview(items)
+      if (items.length === 0) setCaptureResult([])
+    } catch {
+      setCaptureError('Something went wrong while analyzing.')
+    } finally {
+      setCaptureLoading(false)
+    }
+  }
+
+  async function savePreview() {
+    if (!capturePreview?.length) return
+    setCaptureSaving(true)
+    setCaptureError('')
+
+    try {
+      const res = await apiFetch('/api/ai/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ items: capturePreview }),
+      })
+
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        setCaptureError((data as { message?: string }).message || 'Could not save the selected items.')
         return
       }
 
       const created = (data as { created?: CaptureCreated[] }).created ?? []
       setCaptureResult(created)
+      setCapturePreview(null)
       setCaptureVal('')
-
-      for (const item of created) {
-        if (item.type === 'task' && item.date === today) {
-          const taskRes = await apiFetch(`/api/tasks?from=${today}&to=${today}`)
-          if (taskRes.ok) setTasks(await taskRes.json())
-        }
-        if (item.type === 'note') {
-          setNotes(prev => [{
-            id: item.id,
-            userId: user.id,
-            folderId: null,
-            title: item.title,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-          }, ...prev])
-        }
-        if (item.type === 'link') {
-          setLinks(prev => [{
-            id: item.id,
-            userId: user.id,
-            categoryId: null,
-            title: item.title,
-            url: item.url ?? '',
-            description: null,
-            username: null,
-            password: null,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-          }, ...prev])
-        }
-        if (item.type === 'credential') {
-          setCredentials(prev => [{
-            id: item.id,
-            userId: user.id,
-            service: item.title,
-            username: '',
-            password: '',
-            url: item.url ?? null,
-            notes: null,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-          }, ...prev])
-        }
-      }
+      await applyCreatedItems(created)
     } catch {
       setCaptureError('Something went wrong while saving.')
     } finally {
-      setCaptureLoading(false)
+      setCaptureSaving(false)
     }
+  }
+
+  async function applyCreatedItems(created: CaptureCreated[]) {
+    for (const item of created) {
+      if (item.type === 'task' && item.date === today) {
+        const taskRes = await apiFetch(`/api/tasks?from=${today}&to=${today}`)
+        if (taskRes.ok) setTasks(await taskRes.json())
+      }
+      if (item.type === 'note') {
+        setNotes(prev => [{
+          id: item.id,
+          userId: user.id,
+          folderId: null,
+          title: item.title,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        }, ...prev])
+      }
+      if (item.type === 'link') {
+        setLinks(prev => [{
+          id: item.id,
+          userId: user.id,
+          categoryId: null,
+          title: item.title,
+          url: item.url ?? '',
+          description: null,
+          username: null,
+          password: null,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        }, ...prev])
+      }
+      if (item.type === 'credential') {
+        setCredentials(prev => [{
+          id: item.id,
+          userId: user.id,
+          service: item.title,
+          username: '',
+          password: '',
+          url: item.url ?? null,
+          notes: null,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        }, ...prev])
+      }
+    }
+  }
+
+  function previewTitle(item: CapturePreviewItem) {
+    return item.type === 'credential' ? item.service : item.title
+  }
+
+  function previewDetail(item: CapturePreviewItem) {
+    if (item.type === 'task') return item.date
+    if (item.type === 'link') return item.url
+    if (item.type === 'credential') return [item.username, item.url].filter(Boolean).join(' · ') || 'credential'
+    return item.content || 'note'
   }
 
   return (
@@ -304,7 +363,12 @@ export function HomeView({
               <textarea
                 ref={textareaRef}
                 value={captureVal}
-                onChange={e => { setCaptureVal(e.target.value); setCaptureResult(null); setCaptureError('') }}
+                onChange={e => {
+                  setCaptureVal(e.target.value)
+                  setCapturePreview(null)
+                  setCaptureResult(null)
+                  setCaptureError('')
+                }}
                 onKeyDown={e => {
                   if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
                     e.preventDefault()
@@ -313,7 +377,7 @@ export function HomeView({
                 }}
                 placeholder={'Tell the AI what to register...\nExample: "Tomorrow call dentist at 10, save https://railway.app as Deploy, and store Gmail user maria@email.com password 1234"'}
                 rows={5}
-                disabled={captureLoading}
+                disabled={captureLoading || captureSaving}
                 className="block w-full resize-none bg-transparent px-4 py-4 text-[14px] leading-6 outline-none"
                 style={{ color: 'var(--text)' }}
               />
@@ -329,16 +393,16 @@ export function HomeView({
                 </div>
                 <button
                   onClick={submitCapture}
-                  disabled={!captureVal.trim() || captureLoading}
+                  disabled={!captureVal.trim() || captureLoading || captureSaving}
                   className="flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-[13px] font-semibold text-white transition-opacity"
                   style={{
                     background: 'var(--accent)',
-                    opacity: captureVal.trim() && !captureLoading ? 1 : 0.45,
-                    cursor: captureVal.trim() && !captureLoading ? 'pointer' : 'not-allowed',
+                    opacity: captureVal.trim() && !captureLoading && !captureSaving ? 1 : 0.45,
+                    cursor: captureVal.trim() && !captureLoading && !captureSaving ? 'pointer' : 'not-allowed',
                   }}
                 >
                   <SparkleIcon />
-                  {captureLoading ? 'Saving...' : 'Classify & save'}
+                  {captureLoading ? 'Analyzing...' : 'Review with AI'}
                 </button>
               </div>
             </div>
@@ -347,6 +411,61 @@ export function HomeView({
               <p className="mt-3 rounded-xl px-3 py-2 text-[12px]" style={{ background: '#fef2f2', color: '#dc2626' }}>
                 {captureError}
               </p>
+            )}
+
+            {capturePreview && capturePreview.length > 0 && (
+              <div className="mt-4 rounded-2xl border p-3" style={{ borderColor: 'var(--divider)', background: 'var(--bg2)' }}>
+                <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <div style={labelStyle}>Review before saving</div>
+                    <p className="mt-1 text-[12px] text-[var(--text2)]">Remove anything wrong. Nothing is saved until you confirm.</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setCapturePreview(null)}
+                      disabled={captureSaving}
+                      className="rounded-xl px-3 py-2 text-[12px] font-semibold"
+                      style={{ background: 'var(--bg)', color: 'var(--text2)', border: '1px solid var(--divider)' }}
+                    >
+                      Reject all
+                    </button>
+                    <button
+                      onClick={savePreview}
+                      disabled={captureSaving}
+                      className="rounded-xl px-3 py-2 text-[12px] font-semibold text-white"
+                      style={{ background: 'var(--accent)', opacity: captureSaving ? 0.55 : 1 }}
+                    >
+                      {captureSaving ? 'Saving...' : `Save ${capturePreview.length}`}
+                    </button>
+                  </div>
+                </div>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {capturePreview.map((item, index) => (
+                    <div
+                      key={`${item.type}-${index}`}
+                      className="flex min-w-0 items-start gap-3 rounded-xl border p-3"
+                      style={{ borderColor: 'var(--divider)', background: 'var(--bg)' }}
+                    >
+                      <div className="min-w-0 flex-1">
+                        <div className="mb-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--text3)]">
+                          {PREVIEW_LABELS[item.type]}
+                        </div>
+                        <p className="truncate text-[13px] font-semibold text-[var(--text)]">{previewTitle(item)}</p>
+                        <p className="mt-1 line-clamp-2 break-words text-[12px] leading-5 text-[var(--text2)]">{previewDetail(item)}</p>
+                      </div>
+                      <button
+                        onClick={() => setCapturePreview(prev => prev ? prev.filter((_, i) => i !== index) : prev)}
+                        disabled={captureSaving}
+                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[var(--text3)]"
+                        style={{ background: 'var(--bg2)', border: '1px solid var(--divider)' }}
+                        aria-label="Reject item"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
             )}
 
             {captureResult && (
