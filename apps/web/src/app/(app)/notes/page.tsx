@@ -308,23 +308,41 @@ export default function NotesPage() {
       {/* Editor */}
       <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <div
-          className="flex shrink-0 items-center justify-between gap-3 border-b px-4 py-3 md:hidden"
+          className="flex shrink-0 flex-col gap-3 border-b px-4 py-3 md:hidden"
           style={{ borderColor: 'var(--divider)', background: 'var(--bg2)' }}
         >
-          <div>
-            <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.12em', color: 'var(--text3)', textTransform: 'uppercase' }}>
-              Notes
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.12em', color: 'var(--text3)', textTransform: 'uppercase' }}>
+                Notes
+              </div>
+              <p className="text-[13px] text-[var(--text2)]">{filteredNotes.length} page{filteredNotes.length === 1 ? '' : 's'}</p>
             </div>
-            <p className="text-[13px] text-[var(--text2)]">{filteredNotes.length} page{filteredNotes.length === 1 ? '' : 's'}</p>
+            <button
+              onClick={createNote}
+              disabled={creating}
+              className="rounded-xl px-3 py-2 text-[12px] font-semibold text-white"
+              style={{ background: 'var(--accent)', opacity: creating ? 0.6 : 1 }}
+            >
+              New page
+            </button>
           </div>
-          <button
-            onClick={createNote}
-            disabled={creating}
-            className="rounded-xl px-3 py-2 text-[12px] font-semibold text-white"
-            style={{ background: 'var(--accent)', opacity: creating ? 0.6 : 1 }}
-          >
-            New page
-          </button>
+          {filteredNotes.length > 0 && (
+            <select
+              value={selectedNote?.id ?? ''}
+              onChange={e => {
+                const note = filteredNotes.find(n => n.id === e.target.value)
+                if (note) openNote(note)
+              }}
+              className="w-full rounded-xl border bg-[var(--bg)] px-3 py-2 text-[13px] outline-none"
+              style={{ borderColor: 'var(--divider)', color: 'var(--text)' }}
+            >
+              <option value="" disabled>Select a page</option>
+              {filteredNotes.map(note => (
+                <option key={note.id} value={note.id}>{note.title || 'Untitled'}</option>
+              ))}
+            </select>
+          )}
         </div>
         {selectedNote ? (
           <NoteEditor

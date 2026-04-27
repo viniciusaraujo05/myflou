@@ -29,3 +29,89 @@
   to   { opacity: 1; transform: translateY(0); }
 }
 .fade-in { animation: fadeIn 0.3s ease both; }
+
+.app-page {
+  padding: 32px 36px;
+}
+
+.app-page-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.app-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.responsive-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+}
+
+.responsive-card-grid-wide {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 12px;
+}
+
+.calendar-scroll {
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.calendar-grid {
+  min-width: 680px;
+}
+
+.mobile-safe-auth {
+  min-height: 100dvh;
+}
+
+@media (max-width: 767px) {
+  .app-page {
+    padding: 20px 16px 92px;
+  }
+
+  .app-page-header {
+    align-items: stretch;
+    flex-direction: column;
+    margin-bottom: 18px;
+  }
+
+  .app-page-title {
+    font-size: 28px !important;
+    line-height: 1.15 !important;
+  }
+
+  .app-actions {
+    width: 100%;
+  }
+
+  .app-actions > * {
+    flex: 1;
+    min-height: 42px;
+    justify-content: center;
+  }
+
+  .responsive-card-grid,
+  .responsive-card-grid-wide {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .calendar-grid {
+    min-width: 620px;
+  }
+
+  .mobile-safe-auth {
+    align-items: flex-start;
+    padding-top: 44px;
+    padding-bottom: 44px;
+  }
+}

@@ -324,20 +324,20 @@ export function CalendarView() {
       <div className="flex flex-1 overflow-hidden">
 
         {/* ── Main calendar area ── */}
-        <main className="flex flex-1 flex-col overflow-y-auto" style={{ padding: '32px 36px' }}>
+        <main className="app-page flex flex-1 flex-col overflow-y-auto">
 
           {/* Header */}
-          <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 28 }}>
+          <div className="app-page-header" style={{ marginBottom: 28 }}>
             <div>
               <div style={{ fontSize: 11, color: 'var(--text3)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 2 }}>
                 {view === 'month' ? month.getFullYear() : weekStart.getFullYear()}
               </div>
-              <h2 className="font-serif" style={{ fontWeight: 400, fontSize: 34, letterSpacing: '-0.5px' }}>
+              <h2 className="app-page-title font-serif" style={{ fontWeight: 400, fontSize: 34, letterSpacing: '0' }}>
                 {view === 'month' ? MONTH_NAMES[month.getMonth()] : weekLabel}
               </h2>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, paddingBottom: 4 }}>
+            <div className="app-actions" style={{ paddingBottom: 4 }}>
               {/* View toggle */}
               <div style={{ display: 'flex', borderRadius: 8, overflow: 'hidden', border: '1px solid var(--divider)' }}>
                 {(['month', 'week'] as ViewMode[]).map(v => (
@@ -427,8 +427,8 @@ export function CalendarView() {
 
           {/* ─── Month view ───────────────────────────────────────────────── */}
           {view === 'month' && (
-            <>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', marginBottom: 6 }}>
+            <div className="calendar-scroll">
+              <div className="calendar-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', marginBottom: 6 }}>
                 {WEEKDAYS.map(d => (
                   <div key={d} style={{
                     fontSize: 11, fontWeight: 500, color: 'var(--text3)',
@@ -439,7 +439,7 @@ export function CalendarView() {
                 ))}
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 2 }}>
+              <div className="calendar-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: 2 }}>
                 {calendarGrid.map((day, idx) => {
                   const ds = toDateStr(day)
                   const isCurrentMonth = day.getMonth() === month.getMonth()
@@ -493,12 +493,13 @@ export function CalendarView() {
                   )
                 })}
               </div>
-            </>
+            </div>
           )}
 
           {/* ─── Week view ────────────────────────────────────────────────── */}
           {view === 'week' && (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4, flex: 1, minHeight: 0 }}>
+            <div className="calendar-scroll">
+            <div className="calendar-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: 4, flex: 1, minHeight: 0 }}>
               {weekDays.map((day, idx) => {
                 const ds = toDateStr(day)
                 const isToday = isSameDay(day, today)
@@ -635,6 +636,7 @@ export function CalendarView() {
                   </div>
                 )
               })}
+            </div>
             </div>
           )}
         </main>

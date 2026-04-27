@@ -89,18 +89,18 @@ export default function LinksPage() {
   const activeCategory = categories.find(c => c.id === selectedCategoryId)
 
   return (
-    <main className="flex flex-1 flex-col overflow-y-auto" style={{ padding: '32px 36px' }}>
+    <main className="app-page flex flex-1 flex-col overflow-y-auto">
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 24 }}>
+      <div className="app-page-header">
         <div>
           <div style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.12em', color: 'var(--text3)', textTransform: 'uppercase', marginBottom: 4 }}>
             Links
           </div>
-          <h2 className="font-serif" style={{ fontSize: 28, fontWeight: 400, letterSpacing: '-0.5px', margin: 0 }}>
+          <h2 className="app-page-title font-serif" style={{ fontSize: 28, fontWeight: 400, letterSpacing: '0', margin: 0 }}>
             Saved links
           </h2>
         </div>
-        <div style={{ display: 'flex', gap: 8 }}>
+        <div className="app-actions">
           <button
             onClick={() => setCategoryDialog({ open: true })}
             style={{
@@ -124,7 +124,7 @@ export default function LinksPage() {
       </div>
 
       {/* Category filter pills */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 24, alignItems: 'center' }}>
+      <div style={{ display: 'flex', flexWrap: 'nowrap', gap: 6, marginBottom: 24, alignItems: 'center', overflowX: 'auto', paddingBottom: 4 }}>
         <button
           onClick={() => setSelectedCategoryId(null)}
           style={{
@@ -179,7 +179,7 @@ export default function LinksPage() {
           </button>
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 12 }}>
+        <div className="responsive-card-grid">
           {links.map(link => {
             const cat = categories.find(c => c.id === link.categoryId)
             const domain = getDomain(link.url)

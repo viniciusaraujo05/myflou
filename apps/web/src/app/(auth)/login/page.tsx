@@ -75,11 +75,11 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <div className="flex h-screen items-center justify-center bg-[var(--bg)] p-6">
+    <div className="mobile-safe-auth flex items-center justify-center bg-[var(--bg)] px-5 py-6 sm:p-6">
       <div className="w-full max-w-[380px]">
 
         {/* Logo */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 52 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 42 }}>
           <div style={{
             width: 30, height: 30, borderRadius: 8, background: 'var(--accent)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -90,7 +90,7 @@ export default function LoginPage() {
         </div>
 
         {/* Heading */}
-        <h1 className="font-serif" style={{ fontWeight: 400, fontSize: 32, lineHeight: 1.15, letterSpacing: '-0.5px', marginBottom: 8 }}>
+        <h1 className="font-serif" style={{ fontWeight: 400, fontSize: 32, lineHeight: 1.15, letterSpacing: '0', marginBottom: 8 }}>
           Welcome back.
         </h1>
         <p style={{ fontSize: 14, color: 'var(--text3)', marginBottom: 36 }}>

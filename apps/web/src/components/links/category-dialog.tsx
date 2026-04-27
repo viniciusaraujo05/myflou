@@ -36,9 +36,9 @@ export function CategoryDialog({ category, presetColors, onSave, onDelete, onClo
   return (
     <Dialog open onClose={onClose} className="relative z-50">
       <div className="fixed inset-0" style={{ background: 'rgba(28,24,20,0.3)', backdropFilter: 'blur(2px)' }} aria-hidden="true" />
-      <div className="fixed inset-0 flex items-center justify-center p-4">
+      <div className="fixed inset-0 flex items-end justify-center p-3 sm:items-center sm:p-4">
         <DialogPanel
-          className="w-full max-w-sm rounded-2xl overflow-hidden"
+          className="max-h-[92dvh] w-full max-w-sm overflow-hidden rounded-2xl"
           style={{ background: 'var(--bg)', boxShadow: 'var(--shadow)', border: '1px solid var(--divider)' }}
         >
           <div style={{ padding: '18px 20px', borderBottom: '1px solid var(--divider)', background: 'var(--bg2)' }}>
@@ -88,7 +88,7 @@ export function CategoryDialog({ category, presetColors, onSave, onDelete, onClo
               </div>
             </div>
 
-            <div style={{ padding: '12px 20px', borderTop: '1px solid var(--divider)', display: 'flex', gap: 8 }}>
+            <div className="flex-wrap sm:flex-nowrap" style={{ padding: '12px 20px', borderTop: '1px solid var(--divider)', display: 'flex', gap: 8 }}>
               {category && (
                 <button type="button" onClick={handleDelete} disabled={deleting}
                   style={{ padding: '7px 14px', borderRadius: 8, fontSize: 12, fontWeight: 500, border: '1px solid var(--divider)', color: '#dc2626', background: 'transparent', cursor: 'pointer', opacity: deleting ? 0.5 : 1 }}>

@@ -52,9 +52,9 @@ export function CredentialFormDialog({ credential, onSave, onDelete, onClose }: 
   return (
     <Dialog open onClose={onClose} className="relative z-50">
       <div className="fixed inset-0" style={{ background: 'rgba(28,24,20,0.35)', backdropFilter: 'blur(3px)' }} aria-hidden="true" />
-      <div className="fixed inset-0 flex items-center justify-center p-4">
+      <div className="fixed inset-0 flex items-end justify-center p-3 sm:items-center sm:p-4">
         <DialogPanel
-          className="w-full max-w-md rounded-2xl overflow-hidden"
+          className="max-h-[92dvh] w-full max-w-md overflow-hidden rounded-2xl"
           style={{ background: 'var(--bg)', boxShadow: 'var(--shadow)', border: '1px solid var(--divider)' }}
         >
           <div style={{ padding: '18px 22px', borderBottom: '1px solid var(--divider)', background: 'var(--bg2)', display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -67,7 +67,7 @@ export function CredentialFormDialog({ credential, onSave, onDelete, onClose }: 
           </div>
 
           <form onSubmit={handleSave}>
-            <div style={{ padding: '20px 22px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div style={{ padding: '20px 22px', display: 'flex', flexDirection: 'column', gap: 14, maxHeight: 'calc(92dvh - 126px)', overflowY: 'auto' }}>
               {error && <p style={{ fontSize: 12, color: '#dc2626', padding: '7px 10px', borderRadius: 7, background: '#fef2f2', margin: 0 }}>{error}</p>}
 
               <Field label="Service / App">
@@ -111,7 +111,7 @@ export function CredentialFormDialog({ credential, onSave, onDelete, onClose }: 
               </Field>
             </div>
 
-            <div style={{ padding: '12px 22px', borderTop: '1px solid var(--divider)', display: 'flex', gap: 8 }}>
+            <div className="flex-wrap sm:flex-nowrap" style={{ padding: '12px 22px', borderTop: '1px solid var(--divider)', display: 'flex', gap: 8 }}>
               {credential && onDelete && (
                 <button type="button" onClick={handleDelete} disabled={deleting}
                   style={{ padding: '7px 14px', borderRadius: 8, fontSize: 12, fontWeight: 500, border: '1px solid var(--divider)', color: '#dc2626', background: 'transparent', cursor: 'pointer', opacity: deleting ? 0.5 : 1 }}>

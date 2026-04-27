@@ -117,14 +117,14 @@ export default function PasswordsPage() {
   const linkCount = entries.filter(e => e.kind === 'link').length
 
   return (
-    <main className="flex flex-1 flex-col overflow-y-auto" style={{ padding: '32px 36px' }}>
+    <main className="app-page flex flex-1 flex-col overflow-y-auto">
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 24 }}>
+      <div className="app-page-header">
         <div>
           <div style={{ fontSize: 10, fontWeight: 500, letterSpacing: '0.12em', color: 'var(--text3)', textTransform: 'uppercase', marginBottom: 4 }}>
             Security
           </div>
-          <h2 className="font-serif" style={{ fontSize: 28, fontWeight: 400, letterSpacing: '-0.5px', margin: 0 }}>
+          <h2 className="app-page-title font-serif" style={{ fontSize: 28, fontWeight: 400, letterSpacing: '0', margin: 0 }}>
             Users &amp; Passwords
           </h2>
           <p style={{ fontSize: 12, color: 'var(--text3)', marginTop: 4 }}>
@@ -177,7 +177,7 @@ export default function PasswordsPage() {
 
       {/* Entries grid */}
       {filtered.length > 0 && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 12 }}>
+        <div className="responsive-card-grid-wide">
           {filtered.map(entry => {
             const isRevealed = revealed.has(entry.id)
             const initial = serviceInitial(entry.service)
