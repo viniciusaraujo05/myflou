@@ -39,7 +39,7 @@ function CheckCircle({ completed, onToggle }: { completed: boolean; onToggle: ()
 }
 
 export function DayDetailDialog({
-  open, date, tasks, onClose, onToggle, onDelete, onTaskCreated, onOpenTask,
+  open, date, tasks, onClose, onToggle, onTaskCreated, onOpenTask,
 }: DayDetailDialogProps) {
   const [addTitle, setAddTitle] = useState('')
   const [addError, setAddError] = useState('')

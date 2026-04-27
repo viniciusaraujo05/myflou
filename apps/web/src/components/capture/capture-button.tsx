@@ -30,10 +30,10 @@ export function CaptureButton() {
           boxShadow: '0 4px 20px rgba(108,99,255,0.45), 0 2px 8px rgba(0,0,0,0.15)',
         }}
         onMouseEnter={e => {
-          ;(e.currentTarget as HTMLButtonElement).style.transform = 'scale(1.08)'
+          e.currentTarget.style.transform = 'scale(1.08)'
         }}
         onMouseLeave={e => {
-          ;(e.currentTarget as HTMLButtonElement).style.transform = 'scale(1)'
+          e.currentTarget.style.transform = 'scale(1)'
         }}
       >
         {/* Sparkle / capture icon */}
