@@ -1,0 +1,117 @@
+.tiptap {
+  outline: none;
+  min-height: 400px;
+  font-size: 14.5px;
+  line-height: 1.75;
+  color: var(--text);
+}
+
+.tiptap p {
+  margin: 0 0 8px;
+}
+
+.tiptap p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  color: var(--text3);
+  pointer-events: none;
+  float: left;
+  height: 0;
+}
+
+.tiptap h1 { font-size: 26px; font-weight: 700; margin: 24px 0 8px; letter-spacing: -0.4px; line-height: 1.25; }
+.tiptap h2 { font-size: 20px; font-weight: 600; margin: 20px 0 6px; letter-spacing: -0.2px; }
+.tiptap h3 { font-size: 16px; font-weight: 600; margin: 16px 0 4px; }
+
+.tiptap ul,
+.tiptap ol { padding-left: 20px; margin: 6px 0; }
+.tiptap li { margin: 2px 0; }
+
+.tiptap blockquote {
+  border-left: 3px solid var(--accent);
+  margin: 12px 0;
+  padding: 4px 0 4px 16px;
+  color: var(--text2);
+  font-style: italic;
+}
+
+.tiptap code {
+  background: var(--bg3);
+  color: var(--accent);
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 0.875em;
+  font-family: 'Fira Code', 'Cascadia Code', monospace;
+}
+
+.tiptap pre {
+  background: var(--bg3);
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin: 12px 0;
+  overflow-x: auto;
+}
+
+.tiptap pre code {
+  background: none;
+  color: var(--text);
+  padding: 0;
+  font-size: 13px;
+}
+
+.tiptap mark {
+  background: #fef08a;
+  border-radius: 2px;
+  padding: 0 2px;
+}
+
+.tiptap hr {
+  border: none;
+  border-top: 1px solid var(--divider);
+  margin: 20px 0;
+}
+
+/* Task list */
+.tiptap ul[data-type="taskList"] {
+  list-style: none;
+  padding: 0;
+}
+
+.tiptap ul[data-type="taskList"] li {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.tiptap ul[data-type="taskList"] li > label {
+  user-select: none;
+  flex-shrink: 0;
+  margin-top: 3px;
+}
+
+.tiptap ul[data-type="taskList"] li > div {
+  flex: 1;
+}
+
+.tiptap ul[data-type="taskList"] li[data-checked="true"] > div {
+  text-decoration: line-through;
+  color: var(--text3);
+}
+
+.tiptap a {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+.tiptap img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 10px;
+  margin: 8px 0;
+  display: block;
+}
+
+.tiptap img.ProseMirror-selectednode {
+  outline: 2.5px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 10px;
+}

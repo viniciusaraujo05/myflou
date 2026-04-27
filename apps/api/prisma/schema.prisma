@@ -1,0 +1,138 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                   String         @id @default(cuid())
+  email                String         @unique
+  password             String
+  failedLoginAttempts  Int            @default(0)
+  lockedUntil          DateTime?
+  statuses             Json           @default("[]")
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime       @updatedAt
+  refreshTokens        RefreshToken[]
+  tasks                Task[]
+  folders              Folder[]
+  notes                Note[]
+  linkCategories       LinkCategory[]
+  links                Link[]
+  credentials          Credential[]
+
+  @@map("users")
+}
+
+model RefreshToken {
+  id          String   @id @default(cuid())
+  tokenHash   String   @unique  // bcrypt hash of the actual token
+  tokenPrefix String   @default("")  // first 16 hex chars — fast lookup index
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+  @@index([tokenPrefix])
+  @@map("refresh_tokens")
+}
+
+model Task {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title       String
+  date        DateTime @db.Date
+  completed   Boolean  @default(false)
+  description String?
+  hoursSpent  Float?
+  statusId    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+  @@index([userId, date])
+  @@map("tasks")
+}
+
+model Folder {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  color     String   @default("#6366f1")
+  notes     Note[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@map("folders")
+}
+
+model Note {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  folderId  String?
+  folder    Folder?  @relation(fields: [folderId], references: [id], onDelete: SetNull)
+  title     String   @default("Untitled")
+  content   Json     @default("{}")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([folderId])
+  @@map("notes")
+}
+
+model LinkCategory {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  color     String   @default("#6366f1")
+  links     Link[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@map("link_categories")
+}
+
+model Link {
+  id          String        @id @default(cuid())
+  userId      String
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  categoryId  String?
+  category    LinkCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  title       String
+  url         String
+  description String?
+  username    String?
+  password    String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([userId])
+  @@map("links")
+}
+
+model Credential {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  service   String
+  username  String
+  password  String
+  url       String?
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@map("credentials")
+}
