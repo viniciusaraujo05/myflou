@@ -76,30 +76,33 @@ function useActiveItem() {
 }
 
 /** Desktop sidebar navigation — icon + label, vertical list */
-export function SidebarNav() {
+export function SidebarNav({ collapsed = false }: { collapsed?: boolean }) {
   const isActive = useActiveItem()
   return (
     <nav className="flex flex-col gap-0.5">
-      <p className="mb-2 px-2.5 text-[10px] font-semibold uppercase tracking-[0.15em]"
-        style={{ color: 'var(--text3)' }}>
-        Menu
-      </p>
+      {!collapsed && (
+        <p className="mb-2 px-2.5 text-[10px] font-semibold uppercase tracking-[0.15em]"
+          style={{ color: 'var(--text3)' }}>
+          Menu
+        </p>
+      )}
       {NAV_ITEMS.map(item => {
         const active = isActive(item.href, item.exact ?? false)
         return (
           <Link
             key={item.href}
             href={item.href}
-            className="flex items-center gap-2.5 rounded-xl px-2.5 py-2 text-[13px] font-medium transition-all"
+            className={`flex items-center rounded-xl py-2 text-[13px] font-medium transition-all ${collapsed ? 'justify-center px-0' : 'gap-2.5 px-2.5'}`}
             style={{
               background: active ? 'var(--bg3)' : 'transparent',
               color: active ? 'var(--text)' : 'var(--text3)',
             }}
+            title={collapsed ? item.label : undefined}
             onMouseEnter={e => { if (!active) { (e.currentTarget as HTMLElement).style.background = 'rgba(0,0,0,0.04)'; (e.currentTarget as HTMLElement).style.color = 'var(--text2)' } }}
             onMouseLeave={e => { if (!active) { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'var(--text3)' } }}
           >
             {item.icon}
-            {item.label}
+            {!collapsed && item.label}
           </Link>
         )
       })}
