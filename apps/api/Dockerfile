@@ -47,6 +47,9 @@ COPY --from=builder /app/node_modules/.pnpm ./node_modules/.pnpm
 
 WORKDIR /app/apps/api
 
+COPY apps/api/entrypoint.sh ./entrypoint.sh
+RUN chmod +x entrypoint.sh
+
 EXPOSE 3001
 
-CMD ["node", "dist/index.js"]
+CMD ["./entrypoint.sh"]

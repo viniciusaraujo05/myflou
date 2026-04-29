@@ -28,16 +28,19 @@ model User {
 }
 
 model RefreshToken {
-  id          String   @id @default(cuid())
-  tokenHash   String   @unique  // bcrypt hash of the actual token
-  tokenPrefix String   @default("")  // first 16 hex chars — fast lookup index
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  expiresAt   DateTime
-  createdAt   DateTime @default(now())
+  id                String   @id @default(cuid())
+  tokenHash         String   @unique
+  tokenPrefix       String   @default("")
+  family            String   @default(cuid())
+  userId            String
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt         DateTime
+  absoluteExpiresAt DateTime
+  createdAt         DateTime @default(now())
 
   @@index([userId])
   @@index([tokenPrefix])
+  @@index([family])
   @@map("refresh_tokens")
 }
 

@@ -3,10 +3,11 @@ import { InvalidTokenError, MissingTokenError } from '../../domain/auth/auth.err
 import type { ITokenService, TokenPair } from '../../domain/auth/token.service.js'
 import type { IRefreshTokenRepository, RefreshTokenRecord } from '../../domain/auth/refresh-token.repository.js'
 
-const REFRESH_TOKEN_TTL_MS = 7 * 24 * 60 * 60 * 1000
+const REFRESH_TOKEN_SLIDING_TTL_MS = 30 * 24 * 60 * 60 * 1000 // 30 days
 
 interface RefreshOutput {
   tokenPair: TokenPair
+  absoluteExpiresAt: Date
 }
 
 export class RefreshUseCase {
@@ -33,14 +34,24 @@ export class RefreshUseCase {
     const newTokenPrefix = newRawRefreshToken.slice(0, 16)
     const tokenHash = await bcrypt.hash(newRawRefreshToken, 10)
 
+    // Sliding window: extend by 30 days, but never past the absolute ceiling
+    const newExpiresAt = new Date(
+      Math.min(Date.now() + REFRESH_TOKEN_SLIDING_TTL_MS, match.absoluteExpiresAt.getTime()),
+    )
+
     await this.refreshTokenRepo.create(
       match.userId,
       tokenHash,
       newTokenPrefix,
-      new Date(Date.now() + REFRESH_TOKEN_TTL_MS),
+      newExpiresAt,
+      match.absoluteExpiresAt, // preserve absolute expiry from original login
+      match.family,            // preserve family chain for theft detection
     )
 
-    return { tokenPair: { accessToken, refreshToken: newRawRefreshToken } }
+    return {
+      tokenPair: { accessToken, refreshToken: newRawRefreshToken },
+      absoluteExpiresAt: match.absoluteExpiresAt,
+    }
   }
 
   private async findMatch(

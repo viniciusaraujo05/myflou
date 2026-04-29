@@ -4,15 +4,27 @@ import type { IRefreshTokenRepository, RefreshTokenRecord } from '../../domain/a
 export class PrismaRefreshTokenRepository implements IRefreshTokenRepository {
   constructor(private readonly prisma: PrismaClient) {}
 
-  async create(userId: string, tokenHash: string, tokenPrefix: string, expiresAt: Date): Promise<void> {
+  async create(
+    userId: string,
+    tokenHash: string,
+    tokenPrefix: string,
+    expiresAt: Date,
+    absoluteExpiresAt: Date,
+    family: string,
+  ): Promise<void> {
     await this.prisma.refreshToken.create({
-      data: { userId, tokenHash, tokenPrefix, expiresAt },
+      data: { userId, tokenHash, tokenPrefix, expiresAt, absoluteExpiresAt, family },
     })
   }
 
   async findByPrefix(prefix: string): Promise<RefreshTokenRecord[]> {
+    const now = new Date()
     const records = await this.prisma.refreshToken.findMany({
-      where: { tokenPrefix: prefix, expiresAt: { gt: new Date() } },
+      where: {
+        tokenPrefix: prefix,
+        expiresAt: { gt: now },
+        absoluteExpiresAt: { gt: now },
+      },
       include: { user: { select: { email: true } } },
     })
 
@@ -22,6 +34,8 @@ export class PrismaRefreshTokenRepository implements IRefreshTokenRepository {
       userId: r.userId,
       userEmail: r.user.email,
       expiresAt: r.expiresAt,
+      absoluteExpiresAt: r.absoluteExpiresAt,
+      family: r.family,
     }))
   }
 
@@ -30,6 +44,12 @@ export class PrismaRefreshTokenRepository implements IRefreshTokenRepository {
   }
 
   async deleteExpired(now: Date): Promise<void> {
-    await this.prisma.refreshToken.deleteMany({ where: { expiresAt: { lte: now } } })
+    await this.prisma.refreshToken.deleteMany({
+      where: { OR: [{ expiresAt: { lte: now } }, { absoluteExpiresAt: { lte: now } }] },
+    })
+  }
+
+  async deleteAllByFamily(family: string): Promise<void> {
+    await this.prisma.refreshToken.deleteMany({ where: { family } })
   }
 }

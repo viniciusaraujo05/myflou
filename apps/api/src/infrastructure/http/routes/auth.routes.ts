@@ -1,17 +1,20 @@
 import type { FastifyInstance } from 'fastify'
 import { RegisterBodySchema, LoginBodySchema } from '../schemas/auth.http-schema.js'
 
-const ACCESS_MAX_AGE  = 15 * 60            // 15 minutes in seconds
-const REFRESH_MAX_AGE = 7 * 24 * 60 * 60  // 7 days in seconds
+const ACCESS_MAX_AGE = 15 * 60 // 15 minutes in seconds
 
 function cookieOptions(maxAge: number) {
   return {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax' as const,  // lax so the BFF can forward cookies cross-origin in dev
+    sameSite: 'lax' as const,
     path: '/',
     maxAge,
   }
+}
+
+function refreshMaxAge(absoluteExpiresAt: Date): number {
+  return Math.max(0, Math.floor((absoluteExpiresAt.getTime() - Date.now()) / 1000))
 }
 
 export async function authRoutes(app: FastifyInstance) {
@@ -29,11 +32,11 @@ export async function authRoutes(app: FastifyInstance) {
         })
       }
 
-      const { user, tokenPair } = await app.container.auth.register.execute(parsed.data)
+      const { user, tokenPair, absoluteExpiresAt } = await app.container.auth.register.execute(parsed.data)
 
       return reply
         .setCookie('access_token', tokenPair.accessToken, cookieOptions(ACCESS_MAX_AGE))
-        .setCookie('refresh_token', tokenPair.refreshToken, cookieOptions(REFRESH_MAX_AGE))
+        .setCookie('refresh_token', tokenPair.refreshToken, cookieOptions(refreshMaxAge(absoluteExpiresAt)))
         .status(201)
         .send({ user })
     },
@@ -53,11 +56,11 @@ export async function authRoutes(app: FastifyInstance) {
         })
       }
 
-      const { user, tokenPair } = await app.container.auth.login.execute(parsed.data)
+      const { user, tokenPair, absoluteExpiresAt } = await app.container.auth.login.execute(parsed.data)
 
       return reply
         .setCookie('access_token', tokenPair.accessToken, cookieOptions(ACCESS_MAX_AGE))
-        .setCookie('refresh_token', tokenPair.refreshToken, cookieOptions(REFRESH_MAX_AGE))
+        .setCookie('refresh_token', tokenPair.refreshToken, cookieOptions(refreshMaxAge(absoluteExpiresAt)))
         .send({ user })
     },
   )
@@ -65,11 +68,11 @@ export async function authRoutes(app: FastifyInstance) {
   // POST /auth/refresh
   app.post('/refresh', { config: { rateLimit: { max: 10, timeWindow: '15m' } } }, async (request, reply) => {
     const rawRefreshToken = request.cookies?.refresh_token
-    const { tokenPair } = await app.container.auth.refresh.execute(rawRefreshToken)
+    const { tokenPair, absoluteExpiresAt } = await app.container.auth.refresh.execute(rawRefreshToken)
 
     return reply
       .setCookie('access_token', tokenPair.accessToken, cookieOptions(ACCESS_MAX_AGE))
-      .setCookie('refresh_token', tokenPair.refreshToken, cookieOptions(REFRESH_MAX_AGE))
+      .setCookie('refresh_token', tokenPair.refreshToken, cookieOptions(refreshMaxAge(absoluteExpiresAt)))
       .send({ ok: true })
   })
 
