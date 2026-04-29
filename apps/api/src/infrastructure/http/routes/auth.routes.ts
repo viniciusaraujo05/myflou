@@ -27,7 +27,7 @@ export async function authRoutes(app: FastifyInstance) {
       if (!parsed.success) {
         return reply.status(400).send({
           statusCode: 400,
-          message: parsed.error.errors[0]?.message ?? 'Validation error',
+          message: parsed.error.issues[0]?.message ?? 'Validation error',
           code: 'VALIDATION_ERROR',
         })
       }
@@ -51,7 +51,7 @@ export async function authRoutes(app: FastifyInstance) {
       if (!parsed.success) {
         return reply.status(400).send({
           statusCode: 400,
-          message: parsed.error.errors[0]?.message ?? 'Validation error',
+          message: parsed.error.issues[0]?.message ?? 'Validation error',
           code: 'VALIDATION_ERROR',
         })
       }

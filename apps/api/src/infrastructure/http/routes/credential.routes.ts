@@ -23,7 +23,7 @@ export async function credentialRoutes(app: FastifyInstance) {
 
   app.post('/', auth, async (request, reply) => {
     const parsed = CreateSchema.safeParse(request.body)
-    if (!parsed.success) return reply.status(400).send({ statusCode: 400, message: parsed.error.errors[0]?.message ?? 'Validation error' })
+    if (!parsed.success) return reply.status(400).send({ statusCode: 400, message: parsed.error.issues[0]?.message ?? 'Validation error' })
     const userId = getRequestUserId(request)
     const c = await app.container.credential.createCredential.execute({ userId, ...parsed.data })
     return reply.status(201).send(c)
@@ -32,7 +32,7 @@ export async function credentialRoutes(app: FastifyInstance) {
   app.patch('/:id', auth, async (request, reply) => {
     const { id: credentialId } = request.params as { id: string }
     const parsed = UpdateSchema.safeParse(request.body)
-    if (!parsed.success) return reply.status(400).send({ statusCode: 400, message: parsed.error.errors[0]?.message ?? 'Validation error' })
+    if (!parsed.success) return reply.status(400).send({ statusCode: 400, message: parsed.error.issues[0]?.message ?? 'Validation error' })
     const userId = getRequestUserId(request)
     const c = await app.container.credential.updateCredential.execute({ credentialId, userId, ...parsed.data })
     return reply.send(c)

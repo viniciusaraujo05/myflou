@@ -27,7 +27,7 @@ export class HashedPassword {
   static async fromPlain(plain: string): Promise<HashedPassword> {
     const result = PasswordRules.safeParse(plain)
     if (!result.success) {
-      throw new WeakPasswordError(result.error.errors[0]?.message ?? 'Password is too weak')
+      throw new WeakPasswordError(result.error.issues[0]?.message ?? 'Password is too weak')
     }
     const hash = await bcrypt.hash(plain, BCRYPT_COST)
     return new HashedPassword(hash)
