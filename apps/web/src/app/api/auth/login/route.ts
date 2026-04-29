@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
   const parsed = LoginSchema.safeParse(body)
   if (!parsed.success) {
     return NextResponse.json(
-      { message: parsed.error.errors[0]?.message ?? 'Validation error' },
+      { message: parsed.error.issues[0]?.message ?? 'Validation error' },
       { status: 400 },
     )
   }
@@ -28,14 +28,14 @@ export async function POST(req: NextRequest) {
   }
 
   // Forward httpOnly cookies set by Fastify to the browser
-  forwardCookies(upstream, cookies())
+  forwardCookies(upstream, await cookies())
 
   return NextResponse.json(data, { status: 200 })
 }
 
 const ALLOWED_SAME_SITE = new Set(['lax', 'strict', 'none'])
 
-function forwardCookies(upstream: Response, jar: ReturnType<typeof cookies>) {
+function forwardCookies(upstream: Response, jar: Awaited<ReturnType<typeof cookies>>) {
   upstream.headers.getSetCookie?.().forEach((raw) => {
     const [nameValue, ...directives] = raw.split(';').map((s) => s.trim())
     const eqIdx = nameValue.indexOf('=')

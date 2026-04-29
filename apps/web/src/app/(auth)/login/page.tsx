@@ -22,7 +22,7 @@ function LoginForm() {
     const parsed = LoginSchema.safeParse({ email, password })
     if (!parsed.success) {
       const fieldErrors: typeof errors = {}
-      for (const e of parsed.error.errors) {
+      for (const e of parsed.error.issues) {
         const field = e.path[0] as 'email' | 'password'
         if (!fieldErrors[field]) fieldErrors[field] = e.message
       }

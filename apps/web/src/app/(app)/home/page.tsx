@@ -5,7 +5,7 @@ import { HomeView } from './home-view'
 const API = process.env.API_INTERNAL_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
 
 async function getData() {
-  const jar = cookies()
+  const jar = await cookies()
   const token = jar.get('access_token')?.value
   if (!token) return null
 

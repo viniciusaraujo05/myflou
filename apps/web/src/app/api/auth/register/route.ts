@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
   const parsed = RegisterSchema.safeParse(body)
   if (!parsed.success) {
     return NextResponse.json(
-      { message: parsed.error.errors[0]?.message ?? 'Validation error' },
+      { message: parsed.error.issues[0]?.message ?? 'Validation error' },
       { status: 400 },
     )
   }
@@ -27,12 +27,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(data, { status: upstream.status })
   }
 
-  forwardCookies(upstream, cookies())
+  forwardCookies(upstream, await cookies())
 
   return NextResponse.json(data, { status: 201 })
 }
 
-function forwardCookies(upstream: Response, jar: ReturnType<typeof cookies>) {
+function forwardCookies(upstream: Response, jar: Awaited<ReturnType<typeof cookies>>) {
   upstream.headers.getSetCookie?.().forEach((raw) => {
     const [nameValue, ...directives] = raw.split(';').map((s) => s.trim())
     const [name, ...valueParts] = nameValue.split('=')

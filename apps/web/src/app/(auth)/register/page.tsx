@@ -21,7 +21,7 @@ export default function RegisterPage() {
     const newErrors: typeof errors = {}
     const parsed = RegisterSchema.safeParse({ email, password })
     if (!parsed.success) {
-      for (const e of parsed.error.errors) {
+      for (const e of parsed.error.issues) {
         const field = e.path[0] as 'email' | 'password'
         if (!newErrors[field]) newErrors[field] = e.message
       }

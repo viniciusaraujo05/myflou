@@ -9,7 +9,7 @@ const API =
   'http://localhost:3001'
 
 async function getUser(): Promise<User | null> {
-  const token = cookies().get('access_token')?.value
+  const token = (await cookies()).get('access_token')?.value
   if (!token) return null
   try {
     const res = await fetch(`${API}/users/me`, {

@@ -5,7 +5,7 @@ const API = process.env.API_INTERNAL_URL || process.env.NEXT_PUBLIC_API_URL || '
 
 const ALLOWED_SAME_SITE = new Set(['lax', 'strict', 'none'])
 
-function forwardCookies(upstream: Response, jar: ReturnType<typeof cookies>) {
+function forwardCookies(upstream: Response, jar: Awaited<ReturnType<typeof cookies>>) {
   const setCookies =
     typeof upstream.headers.getSetCookie === 'function'
       ? upstream.headers.getSetCookie()
@@ -41,7 +41,7 @@ function forwardCookies(upstream: Response, jar: ReturnType<typeof cookies>) {
 }
 
 export async function POST() {
-  const jar = cookies()
+  const jar = await cookies()
   const refreshToken = jar.get('refresh_token')?.value
 
   if (!refreshToken) {

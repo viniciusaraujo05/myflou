@@ -3,8 +3,8 @@ import { NextRequest, NextResponse } from 'next/server'
 
 const API = process.env.API_INTERNAL_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
 
-function authHeader(): Record<string, string> {
-  const token = cookies().get('access_token')?.value
+async function authHeader(): Promise<Record<string, string>> {
+  const token = (await cookies()).get('access_token')?.value
   return token ? { Authorization: `Bearer ${token}` } : {}
 }
 
@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
   const qs = new URLSearchParams()
   if (folderId) qs.set('folderId', folderId)
   if (search) qs.set('search', search)
-  const upstream = await fetch(`${API}/notes?${qs}`, { headers: authHeader(), cache: 'no-store' })
+  const upstream = await fetch(`${API}/notes?${qs}`, { headers: await authHeader(), cache: 'no-store' })
   const data = await upstream.json()
   return NextResponse.json(data, { status: upstream.status })
 }
@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
   const body = await req.json()
   const upstream = await fetch(`${API}/notes`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...authHeader() },
+    headers: { 'Content-Type': 'application/json', ...(await authHeader()) },
     body: JSON.stringify(body),
   })
   const data = await upstream.json()
