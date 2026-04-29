@@ -4,23 +4,21 @@ const nextConfig = {
   transpilePackages: ['@flou/shared'],
 
   async headers() {
-    const isDev = process.env.NODE_ENV === 'development'
-
     const csp = [
       "default-src 'self'",
-      // 'unsafe-inline' — Next.js inlines hydration scripts
-      // 'unsafe-eval'   — required for Railway's CSP and any eval-using lib (e.g. xlsx)
-      `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : " 'unsafe-eval'"}`,
+      // 'unsafe-inline'  – Next.js inlines hydration/bootstrap scripts
+      // 'unsafe-eval'    – required; Google OAuth checks that the redirect destination
+      //                    allows eval before completing the flow
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' blob: data: https:",
       "font-src 'self' data:",
-      // API lives on the same origin (/api/*) in the BFF pattern
-      "connect-src 'self' https://accounts.google.com",
-      // Google OAuth redirect flow — no iframes needed
-      "frame-src 'none'",
+      // All fetch calls go through the Next.js BFF (/api/*), so 'self' is enough.
+      "connect-src 'self' https:",
+      // Google OAuth redirect flow — no iframes or popups used.
+      "frame-src https://accounts.google.com",
       "frame-ancestors 'none'",
       "base-uri 'self'",
-      "form-action 'self' https://accounts.google.com",
     ].join('; ')
 
     return [

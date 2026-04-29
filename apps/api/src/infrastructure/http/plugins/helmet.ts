@@ -4,15 +4,12 @@ import type { FastifyInstance } from 'fastify'
 
 export const helmetPlugin = fp(async (app: FastifyInstance) => {
   await app.register(helmet, {
-    contentSecurityPolicy: {
-      directives: {
-        defaultSrc: ["'self'"],
-        scriptSrc: ["'self'"],
-        styleSrc: ["'self'"],
-        imgSrc: ["'self'", 'data:'],
-        frameAncestors: ["'none'"],
-      },
-    },
-    crossOriginEmbedderPolicy: { policy: 'require-corp' },
+    // CSP is for HTML documents — this is a JSON API, so disable it.
+    // The Next.js frontend owns the page-level CSP.
+    contentSecurityPolicy: false,
+
+    // COEP + COOP can break cross-origin OAuth redirects.
+    crossOriginEmbedderPolicy: false,
+    crossOriginOpenerPolicy: false,
   })
 })
