@@ -17,11 +17,27 @@ export class PrismaUserRepository implements IUserRepository {
     return record ? this.toEntity(record) : null
   }
 
+  async findByGoogleId(googleId: string): Promise<User | null> {
+    const record = await this.prisma.user.findUnique({ where: { googleId } })
+    return record ? this.toEntity(record) : null
+  }
+
   async create(email: Email, password: HashedPassword): Promise<User> {
     const record = await this.prisma.user.create({
       data: { email: email.value, password: password.value },
     })
     return this.toEntity(record)
+  }
+
+  async createWithGoogle(email: Email, googleId: string): Promise<User> {
+    const record = await this.prisma.user.create({
+      data: { email: email.value, googleId },
+    })
+    return this.toEntity(record)
+  }
+
+  async linkGoogleId(userId: string, googleId: string): Promise<void> {
+    await this.prisma.user.update({ where: { id: userId }, data: { googleId } })
   }
 
   async incrementFailedAttempts(userId: string, lockedUntil: Date | null): Promise<void> {
@@ -49,20 +65,20 @@ export class PrismaUserRepository implements IUserRepository {
   private toEntity(record: {
     id: string
     email: string
-    password: string
+    password: string | null
+    googleId: string | null
     failedLoginAttempts: number
     lockedUntil: Date | null
     statuses: unknown
     createdAt: Date
     updatedAt: Date
   }): User {
-    const statuses = Array.isArray(record.statuses)
-      ? (record.statuses as StatusRecord[])
-      : []
+    const statuses = Array.isArray(record.statuses) ? (record.statuses as StatusRecord[]) : []
     return User.reconstitute({
       id: record.id,
       email: Email.create(record.email),
-      password: HashedPassword.fromHash(record.password),
+      password: record.password ? HashedPassword.fromHash(record.password) : null,
+      googleId: record.googleId,
       failedLoginAttempts: record.failedLoginAttempts,
       lockedUntil: record.lockedUntil,
       statuses,

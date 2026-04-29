@@ -41,7 +41,7 @@ export class LoginUseCase {
     }
 
     // Always run bcrypt — even if user not found — to prevent timing attacks
-    const hashToCompare = user?.password.value ?? DUMMY_HASH
+    const hashToCompare = user?.password?.value ?? DUMMY_HASH
     const valid = await bcrypt.compare(input.password, hashToCompare)
 
     if (!user || !valid) {

@@ -76,6 +76,21 @@ export async function authRoutes(app: FastifyInstance) {
       .send({ ok: true })
   })
 
+  // POST /auth/google — called by Next.js BFF after verifying Google tokens
+  app.post('/google', { config: { rateLimit: { max: 10, timeWindow: '15m' } } }, async (request, reply) => {
+    const { googleId, email, name } = request.body as { googleId: string; email: string; name?: string }
+    if (!googleId || !email) {
+      return reply.status(400).send({ statusCode: 400, message: 'googleId and email are required' })
+    }
+
+    const { user, tokenPair, absoluteExpiresAt } = await app.container.auth.googleLogin.execute({ googleId, email, name })
+
+    return reply
+      .setCookie('access_token', tokenPair.accessToken, cookieOptions(ACCESS_MAX_AGE))
+      .setCookie('refresh_token', tokenPair.refreshToken, cookieOptions(refreshMaxAge(absoluteExpiresAt)))
+      .send({ user })
+  })
+
   // POST /auth/logout
   app.post('/logout', { config: { rateLimit: { max: 10, timeWindow: '15m' } } }, async (request, reply) => {
     const rawRefreshToken = request.cookies?.refresh_token

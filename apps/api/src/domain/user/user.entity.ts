@@ -10,7 +10,8 @@ export interface StatusRecord {
 export interface UserProps {
   id: string
   email: Email
-  password: HashedPassword
+  password: HashedPassword | null
+  googleId: string | null
   failedLoginAttempts: number
   lockedUntil: Date | null
   statuses: StatusRecord[]
@@ -34,15 +35,12 @@ export class User {
 
   get id(): string { return this.props.id }
   get email(): Email { return this.props.email }
-  get password(): HashedPassword { return this.props.password }
+  get password(): HashedPassword | null { return this.props.password }
+  get googleId(): string | null { return this.props.googleId }
   get failedLoginAttempts(): number { return this.props.failedLoginAttempts }
   get lockedUntil(): Date | null { return this.props.lockedUntil }
   get statuses(): StatusRecord[] { return this.props.statuses }
   get createdAt(): Date { return this.props.createdAt }
-
-  async verifyPassword(plain: string): Promise<boolean> {
-    return this.props.password.compare(plain)
-  }
 
   toDTO(): UserDTO {
     return {
