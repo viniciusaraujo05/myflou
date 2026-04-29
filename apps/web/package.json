@@ -12,6 +12,7 @@
   "dependencies": {
     "@flou/shared": "workspace:*",
     "@headlessui/react": "^2.2.10",
+    "@tailwindcss/postcss": "^4.2.4",
     "@tiptap/extension-highlight": "^3.22.5",
     "@tiptap/extension-image": "^3.22.5",
     "@tiptap/extension-link": "^3.22.5",
