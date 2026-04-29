@@ -10,6 +10,7 @@ export interface StatusRecord {
 export interface UserProps {
   id: string
   email: Email
+  name: string | null
   password: HashedPassword | null
   googleId: string | null
   failedLoginAttempts: number
@@ -22,6 +23,8 @@ export interface UserProps {
 export interface UserDTO {
   id: string
   email: string
+  name: string | null
+  hasPassword: boolean
   statuses: StatusRecord[]
   createdAt: string
 }
@@ -35,6 +38,7 @@ export class User {
 
   get id(): string { return this.props.id }
   get email(): Email { return this.props.email }
+  get name(): string | null { return this.props.name }
   get password(): HashedPassword | null { return this.props.password }
   get googleId(): string | null { return this.props.googleId }
   get failedLoginAttempts(): number { return this.props.failedLoginAttempts }
@@ -46,6 +50,8 @@ export class User {
     return {
       id: this.props.id,
       email: this.props.email.value,
+      name: this.props.name,
+      hasPassword: this.props.password !== null,
       statuses: this.props.statuses,
       createdAt: this.props.createdAt.toISOString(),
     }

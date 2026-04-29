@@ -62,9 +62,25 @@ export class PrismaUserRepository implements IUserRepository {
     return this.toEntity(record)
   }
 
+  async updateProfile(userId: string, name: string | null): Promise<User> {
+    const record = await this.prisma.user.update({
+      where: { id: userId },
+      data: { name },
+    })
+    return this.toEntity(record)
+  }
+
+  async updatePassword(userId: string, newPassword: HashedPassword): Promise<void> {
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { password: newPassword.value },
+    })
+  }
+
   private toEntity(record: {
     id: string
     email: string
+    name: string | null
     password: string | null
     googleId: string | null
     failedLoginAttempts: number
@@ -77,6 +93,7 @@ export class PrismaUserRepository implements IUserRepository {
     return User.reconstitute({
       id: record.id,
       email: Email.create(record.email),
+      name: record.name,
       password: record.password ? HashedPassword.fromHash(record.password) : null,
       googleId: record.googleId,
       failedLoginAttempts: record.failedLoginAttempts,

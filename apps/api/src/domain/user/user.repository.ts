@@ -12,4 +12,6 @@ export interface IUserRepository {
   incrementFailedAttempts(userId: string, lockedUntil: Date | null): Promise<void>
   resetFailedAttempts(userId: string): Promise<void>
   setStatuses(userId: string, statuses: StatusRecord[]): Promise<User>
+  updateProfile(userId: string, name: string | null): Promise<User>
+  updatePassword(userId: string, newPassword: HashedPassword): Promise<void>
 }

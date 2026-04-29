@@ -14,6 +14,8 @@ import { RefreshUseCase } from '../../application/auth/refresh.usecase.js'
 import { LogoutUseCase } from '../../application/auth/logout.usecase.js'
 import { GoogleLoginUseCase } from '../../application/auth/google-login.usecase.js'
 import { GetMeUseCase } from '../../application/user/get-me.usecase.js'
+import { UpdateProfileUseCase } from '../../application/user/update-profile.usecase.js'
+import { ChangePasswordUseCase } from '../../application/user/change-password.usecase.js'
 import { CreateTaskUseCase } from '../../application/task/create-task.usecase.js'
 import { GetTasksUseCase } from '../../application/task/get-tasks.usecase.js'
 import { UpdateTaskUseCase } from '../../application/task/update-task.usecase.js'
@@ -57,6 +59,8 @@ export interface Container {
   }
   user: {
     getMe: GetMeUseCase
+    updateProfile: UpdateProfileUseCase
+    changePassword: ChangePasswordUseCase
   }
   task: {
     createTask: CreateTaskUseCase
@@ -127,6 +131,8 @@ export const containerPlugin = fp(async (app: FastifyInstance) => {
     },
     user: {
       getMe: new GetMeUseCase(userRepo),
+      updateProfile: new UpdateProfileUseCase(userRepo),
+      changePassword: new ChangePasswordUseCase(userRepo),
     },
     task: {
       createTask: new CreateTaskUseCase(taskRepo, userRepo),

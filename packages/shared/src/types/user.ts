@@ -3,6 +3,8 @@ import type { Status } from './status'
 export interface User {
   id: string
   email: string
+  name: string | null
+  hasPassword: boolean
   statuses: Status[]
   createdAt: string
 }
