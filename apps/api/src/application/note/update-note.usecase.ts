@@ -31,7 +31,7 @@ export class UpdateNoteUseCase {
     if (input.content !== undefined) data.content = input.content
     if ('folderId' in input) data.folderId = input.folderId ?? null
 
-    const updated = await this.noteRepo.update(input.noteId, data)
+    const updated = await this.noteRepo.update(input.noteId, data, input.userId)
     return updated.toDTO()
   }
 }

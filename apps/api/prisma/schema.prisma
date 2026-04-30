@@ -34,6 +34,8 @@ model RefreshToken {
   tokenHash         String   @unique
   tokenPrefix       String   @default("")
   family            String   @default(cuid())
+  rotated           Boolean  @default(false)
+  rotatedAt         DateTime?
   userId            String
   user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   expiresAt         DateTime

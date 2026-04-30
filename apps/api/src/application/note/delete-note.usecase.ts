@@ -12,6 +12,6 @@ export class DeleteNoteUseCase {
   async execute(input: Input): Promise<void> {
     const note = await this.noteRepo.findById(input.noteId)
     if (!note || note.userId !== input.userId) throw new NotFoundError('Note')
-    await this.noteRepo.delete(input.noteId)
+    await this.noteRepo.delete(input.noteId, input.userId)
   }
 }

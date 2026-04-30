@@ -23,13 +23,14 @@ export class PrismaLinkCategoryRepository implements ILinkCategoryRepository {
     return record ? this.toEntity(record) : null
   }
 
-  async update(id: string, data: { name?: string; color?: string }): Promise<LinkCategory> {
-    const record = await this.prisma.linkCategory.update({ where: { id }, data })
+  async update(id: string, data: { name?: string; color?: string }, userId: string): Promise<LinkCategory> {
+    await this.prisma.linkCategory.updateMany({ where: { id, userId }, data })
+    const record = await this.prisma.linkCategory.findUniqueOrThrow({ where: { id } })
     return this.toEntity(record)
   }
 
-  async delete(id: string): Promise<void> {
-    await this.prisma.linkCategory.delete({ where: { id } })
+  async delete(id: string, userId: string): Promise<void> {
+    await this.prisma.linkCategory.deleteMany({ where: { id, userId } })
   }
 
   private toEntity(record: {

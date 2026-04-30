@@ -240,7 +240,7 @@ export class ClassifyAndSaveUseCase {
           if (item.folderId && !folders.some(f => f.id === item.folderId)) continue
           const note = await this.noteRepo.create(userId, item.title?.trim() || 'Untitled', item.folderId ?? null)
           if (item.content) {
-            await this.noteRepo.update(note.id, { content: textToTiptap(item.content) })
+            await this.noteRepo.update(note.id, { content: textToTiptap(item.content) }, userId)
           }
           created.push({ type: 'note', id: note.id, title: item.title?.trim() || 'Untitled' })
         } else if (item.type === 'task') {

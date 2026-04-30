@@ -59,15 +59,16 @@ export class PrismaLinkRepository implements ILinkRepository {
     return record ? toEntity(record) : null
   }
 
-  async update(id: string, data: { title?: string; url?: string; description?: string | null; username?: string | null; password?: string | null; categoryId?: string | null }): Promise<Link> {
+  async update(id: string, data: { title?: string; url?: string; description?: string | null; username?: string | null; password?: string | null; categoryId?: string | null }, userId: string): Promise<Link> {
     const patch: Record<string, unknown> = { ...data }
     if ('username' in data) patch.username = enc(data.username)
     if ('password' in data) patch.password = enc(data.password)
-    const record = await this.prisma.link.update({ where: { id }, data: patch })
+    await this.prisma.link.updateMany({ where: { id, userId }, data: patch })
+    const record = await this.prisma.link.findUniqueOrThrow({ where: { id } })
     return toEntity(record)
   }
 
-  async delete(id: string): Promise<void> {
-    await this.prisma.link.delete({ where: { id } })
+  async delete(id: string, userId: string): Promise<void> {
+    await this.prisma.link.deleteMany({ where: { id, userId } })
   }
 }

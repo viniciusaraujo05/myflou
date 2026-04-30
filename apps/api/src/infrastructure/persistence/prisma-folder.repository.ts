@@ -23,13 +23,14 @@ export class PrismaFolderRepository implements IFolderRepository {
     return record ? this.toEntity(record) : null
   }
 
-  async update(id: string, data: { name?: string; color?: string }): Promise<Folder> {
-    const record = await this.prisma.folder.update({ where: { id }, data })
+  async update(id: string, data: { name?: string; color?: string }, userId: string): Promise<Folder> {
+    await this.prisma.folder.updateMany({ where: { id, userId }, data })
+    const record = await this.prisma.folder.findUniqueOrThrow({ where: { id } })
     return this.toEntity(record)
   }
 
-  async delete(id: string): Promise<void> {
-    await this.prisma.folder.delete({ where: { id } })
+  async delete(id: string, userId: string): Promise<void> {
+    await this.prisma.folder.deleteMany({ where: { id, userId } })
   }
 
   private toEntity(record: {

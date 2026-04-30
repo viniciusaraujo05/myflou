@@ -18,6 +18,8 @@ export interface IRefreshTokenRepository {
     family: string,
   ): Promise<void>
   findByPrefix(prefix: string): Promise<RefreshTokenRecord[]>
+  findRotatedByPrefix(prefix: string): Promise<RefreshTokenRecord[]>
+  markAsRotated(id: string): Promise<void>
   deleteById(id: string): Promise<void>
   deleteExpired(now: Date): Promise<void>
   deleteAllByFamily(family: string): Promise<void>

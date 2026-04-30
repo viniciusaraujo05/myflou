@@ -24,17 +24,25 @@ export class RefreshUseCase {
     const candidates = await this.refreshTokenRepo.findByPrefix(prefix)
     const match = await this.findMatch(rawRefreshToken, candidates)
 
-    if (!match) throw new InvalidTokenError()
+    if (!match) {
+      // Check for token replay: a previously rotated token being submitted
+      // This is the signature of a stolen token — revoke the entire family
+      const rotatedCandidates = await this.refreshTokenRepo.findRotatedByPrefix(prefix)
+      const rotatedMatch = await this.findMatch(rawRefreshToken, rotatedCandidates)
+      if (rotatedMatch) {
+        await this.refreshTokenRepo.deleteAllByFamily(rotatedMatch.family)
+      }
+      throw new InvalidTokenError()
+    }
 
-    // Rotate: delete old token, issue new pair
-    await this.refreshTokenRepo.deleteById(match.id)
+    // Mark old token as rotated (kept briefly for theft detection) instead of hard-deleting
+    await this.refreshTokenRepo.markAsRotated(match.id)
 
     const accessToken = this.tokenService.signAccessToken({ sub: match.userId, email: match.userEmail })
     const newRawRefreshToken = this.tokenService.generateRefreshToken()
     const newTokenPrefix = newRawRefreshToken.slice(0, 16)
     const tokenHash = await bcrypt.hash(newRawRefreshToken, 10)
 
-    // Sliding window: extend by 30 days, but never past the absolute ceiling
     const newExpiresAt = new Date(
       Math.min(Date.now() + REFRESH_TOKEN_SLIDING_TTL_MS, match.absoluteExpiresAt.getTime()),
     )
@@ -44,8 +52,8 @@ export class RefreshUseCase {
       tokenHash,
       newTokenPrefix,
       newExpiresAt,
-      match.absoluteExpiresAt, // preserve absolute expiry from original login
-      match.family,            // preserve family chain for theft detection
+      match.absoluteExpiresAt,
+      match.family,
     )
 
     return {

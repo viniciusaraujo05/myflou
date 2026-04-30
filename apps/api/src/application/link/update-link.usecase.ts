@@ -37,7 +37,7 @@ export class UpdateLinkUseCase {
     if ('password' in input) data.password = input.password ?? null
     if ('categoryId' in input) data.categoryId = input.categoryId ?? null
 
-    const updated = await this.linkRepo.update(input.linkId, data)
+    const updated = await this.linkRepo.update(input.linkId, data, input.userId)
     return updated.toDTO()
   }
 }

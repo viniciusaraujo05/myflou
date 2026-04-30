@@ -48,15 +48,16 @@ export class PrismaCredentialRepository implements ICredentialRepository {
     return r ? toEntity(r) : null
   }
 
-  async update(id: string, data: { service?: string; username?: string; password?: string; url?: string | null; notes?: string | null }): Promise<Credential> {
+  async update(id: string, data: { service?: string; username?: string; password?: string; url?: string | null; notes?: string | null }, userId: string): Promise<Credential> {
     const encrypted: Record<string, unknown> = { ...data }
     if (data.username !== undefined) encrypted.username = encrypt(data.username)
     if (data.password !== undefined) encrypted.password = encrypt(data.password)
-    const r = await this.prisma.credential.update({ where: { id }, data: encrypted })
+    await this.prisma.credential.updateMany({ where: { id, userId }, data: encrypted })
+    const r = await this.prisma.credential.findUniqueOrThrow({ where: { id } })
     return toEntity(r)
   }
 
-  async delete(id: string): Promise<void> {
-    await this.prisma.credential.delete({ where: { id } })
+  async delete(id: string, userId: string): Promise<void> {
+    await this.prisma.credential.deleteMany({ where: { id, userId } })
   }
 }

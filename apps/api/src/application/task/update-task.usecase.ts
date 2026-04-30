@@ -48,7 +48,7 @@ export class UpdateTaskUseCase {
     if ('hoursSpent' in input) data.hoursSpent = input.hoursSpent ?? null
     if ('statusId' in input) data.statusId = input.statusId ?? null
 
-    const updated = await this.taskRepo.update(input.taskId, data)
+    const updated = await this.taskRepo.update(input.taskId, data, input.userId)
     return updated.toDTO()
   }
 }

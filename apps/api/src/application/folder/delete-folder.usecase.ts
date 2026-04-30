@@ -7,6 +7,6 @@ export class DeleteFolderUseCase {
   async execute(input: { folderId: string; userId: string }): Promise<void> {
     const existing = await this.folderRepo.findById(input.folderId)
     if (!existing || existing.userId !== input.userId) throw new NotFoundError('Folder')
-    await this.folderRepo.delete(input.folderId)
+    await this.folderRepo.delete(input.folderId, input.userId)
   }
 }

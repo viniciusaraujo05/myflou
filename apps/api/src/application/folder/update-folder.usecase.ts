@@ -19,7 +19,7 @@ export class UpdateFolderUseCase {
     const data: { name?: string; color?: string } = {}
     if (input.name !== undefined) data.name = input.name.trim()
     if (input.color !== undefined) data.color = input.color
-    const folder = await this.folderRepo.update(input.folderId, data)
+    const folder = await this.folderRepo.update(input.folderId, data, input.userId)
     return folder.toDTO()
   }
 }

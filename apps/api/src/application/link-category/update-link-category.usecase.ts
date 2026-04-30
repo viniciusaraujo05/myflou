@@ -19,7 +19,7 @@ export class UpdateLinkCategoryUseCase {
     const data: { name?: string; color?: string } = {}
     if (input.name !== undefined) data.name = input.name.trim()
     if (input.color !== undefined) data.color = input.color
-    const category = await this.linkCategoryRepo.update(input.categoryId, data)
+    const category = await this.linkCategoryRepo.update(input.categoryId, data, input.userId)
     return category.toDTO()
   }
 }

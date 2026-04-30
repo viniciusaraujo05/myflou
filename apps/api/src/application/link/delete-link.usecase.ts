@@ -12,6 +12,6 @@ export class DeleteLinkUseCase {
   async execute(input: Input): Promise<void> {
     const link = await this.linkRepo.findById(input.linkId)
     if (!link || link.userId !== input.userId) throw new NotFoundError('Link')
-    await this.linkRepo.delete(input.linkId)
+    await this.linkRepo.delete(input.linkId, input.userId)
   }
 }

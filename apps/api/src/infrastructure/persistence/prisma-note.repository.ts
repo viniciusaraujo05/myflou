@@ -37,17 +37,18 @@ export class PrismaNoteRepository implements INotRepository {
     return record ? this.toEntity(record) : null
   }
 
-  async update(id: string, data: { title?: string; content?: unknown; folderId?: string | null }): Promise<Note> {
+  async update(id: string, data: { title?: string; content?: unknown; folderId?: string | null }, userId: string): Promise<Note> {
     const updateData: Prisma.NoteUncheckedUpdateInput = {}
     if (data.title !== undefined) updateData.title = data.title
     if (data.content !== undefined) updateData.content = data.content as Prisma.InputJsonValue
     if ('folderId' in data) updateData.folderId = data.folderId ?? null
-    const record = await this.prisma.note.update({ where: { id }, data: updateData })
+    await this.prisma.note.updateMany({ where: { id, userId }, data: updateData })
+    const record = await this.prisma.note.findUniqueOrThrow({ where: { id } })
     return this.toEntity(record)
   }
 
-  async delete(id: string): Promise<void> {
-    await this.prisma.note.delete({ where: { id } })
+  async delete(id: string, userId: string): Promise<void> {
+    await this.prisma.note.deleteMany({ where: { id, userId } })
   }
 
   private toEntity(record: {

@@ -7,6 +7,6 @@ export class DeleteLinkCategoryUseCase {
   async execute(input: { categoryId: string; userId: string }): Promise<void> {
     const existing = await this.linkCategoryRepo.findById(input.categoryId)
     if (!existing || existing.userId !== input.userId) throw new NotFoundError('Link category')
-    await this.linkCategoryRepo.delete(input.categoryId)
+    await this.linkCategoryRepo.delete(input.categoryId, input.userId)
   }
 }

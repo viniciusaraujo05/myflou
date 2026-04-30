@@ -25,13 +25,14 @@ export class PrismaTaskRepository implements ITaskRepository {
     return record ? this.toEntity(record) : null
   }
 
-  async update(id: string, data: { title?: string; date?: Date; completed?: boolean; description?: string | null; hoursSpent?: number | null; statusId?: string | null }): Promise<Task> {
-    const record = await this.prisma.task.update({ where: { id }, data })
+  async update(id: string, data: { title?: string; date?: Date; completed?: boolean; description?: string | null; hoursSpent?: number | null; statusId?: string | null }, userId: string): Promise<Task> {
+    await this.prisma.task.updateMany({ where: { id, userId }, data })
+    const record = await this.prisma.task.findUniqueOrThrow({ where: { id } })
     return this.toEntity(record)
   }
 
-  async delete(id: string): Promise<void> {
-    await this.prisma.task.delete({ where: { id } })
+  async delete(id: string, userId: string): Promise<void> {
+    await this.prisma.task.deleteMany({ where: { id, userId } })
   }
 
   private toEntity(record: {

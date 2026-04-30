@@ -13,6 +13,6 @@ export class DeleteTaskUseCase {
     const task = await this.taskRepo.findById(input.taskId)
     if (!task) throw new TaskNotFoundError()
     if (task.userId !== input.userId) throw new TaskAccessDeniedError()
-    await this.taskRepo.delete(input.taskId)
+    await this.taskRepo.delete(input.taskId, input.userId)
   }
 }
