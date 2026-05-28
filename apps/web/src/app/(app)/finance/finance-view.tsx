@@ -7,7 +7,7 @@ import { apiFetch } from '@/lib/auth'
 // ─── helpers ────────────────────────────────────────────────────────────────
 
 function fmt(amount: number) {
-  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(amount)
+  return new Intl.NumberFormat('en-IE', { style: 'currency', currency: 'EUR' }).format(amount)
 }
 
 function monthLabel(year: number, month: number) {
@@ -165,7 +165,7 @@ function TransactionDialog({
 
         <form onSubmit={handleSubmit}>
           <Field>
-            <FieldLabel>Amount (R$)</FieldLabel>
+            <FieldLabel>Amount (€)</FieldLabel>
             <input
               type="number" step="0.01" min="0.01" required
               value={amount} onChange={e => setAmount(e.target.value)}
@@ -295,7 +295,7 @@ function SubscriptionDialog({
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             <Field>
-              <FieldLabel>Amount (R$)</FieldLabel>
+              <FieldLabel>Amount (€)</FieldLabel>
               <input
                 type="number" step="0.01" min="0.01" required
                 value={amount} onChange={e => setAmount(e.target.value)}
