@@ -25,6 +25,8 @@ model User {
   linkCategories       LinkCategory[]
   links                Link[]
   credentials          Credential[]
+  transactions         Transaction[]
+  subscriptions        Subscription[]
 
   @@map("users")
 }
@@ -142,4 +144,51 @@ model Credential {
 
   @@index([userId])
   @@map("credentials")
+}
+
+model Transaction {
+  id          String          @id @default(cuid())
+  userId      String
+  user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type        TransactionType
+  amount      Float
+  category    String
+  description String?
+  date        DateTime        @db.Date
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  @@index([userId])
+  @@index([userId, date])
+  @@map("transactions")
+}
+
+model Subscription {
+  id              String       @id @default(cuid())
+  userId          String
+  user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name            String
+  amount          Float
+  billingCycle    BillingCycle
+  nextBillingDate DateTime     @db.Date
+  active          Boolean      @default(true)
+  description     String?
+  category        String?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  @@index([userId])
+  @@map("subscriptions")
+}
+
+enum TransactionType {
+  INCOME
+  EXPENSE
+}
+
+enum BillingCycle {
+  WEEKLY
+  MONTHLY
+  QUARTERLY
+  YEARLY
 }

@@ -48,6 +48,16 @@ import { CreateCredentialUseCase } from '../../application/credential/create-cre
 import { GetCredentialsUseCase } from '../../application/credential/get-credentials.usecase.js'
 import { UpdateCredentialUseCase } from '../../application/credential/update-credential.usecase.js'
 import { DeleteCredentialUseCase } from '../../application/credential/delete-credential.usecase.js'
+import { PrismaTransactionRepository } from '../persistence/prisma-transaction.repository.js'
+import { PrismaSubscriptionRepository } from '../persistence/prisma-subscription.repository.js'
+import { CreateTransactionUseCase } from '../../application/transaction/create-transaction.usecase.js'
+import { GetTransactionsUseCase } from '../../application/transaction/get-transactions.usecase.js'
+import { UpdateTransactionUseCase } from '../../application/transaction/update-transaction.usecase.js'
+import { DeleteTransactionUseCase } from '../../application/transaction/delete-transaction.usecase.js'
+import { CreateSubscriptionUseCase } from '../../application/subscription/create-subscription.usecase.js'
+import { GetSubscriptionsUseCase } from '../../application/subscription/get-subscriptions.usecase.js'
+import { UpdateSubscriptionUseCase } from '../../application/subscription/update-subscription.usecase.js'
+import { DeleteSubscriptionUseCase } from '../../application/subscription/delete-subscription.usecase.js'
 
 export interface Container {
   auth: {
@@ -105,6 +115,18 @@ export interface Container {
     updateCredential: UpdateCredentialUseCase
     deleteCredential: DeleteCredentialUseCase
   }
+  transaction: {
+    createTransaction: CreateTransactionUseCase
+    getTransactions: GetTransactionsUseCase
+    updateTransaction: UpdateTransactionUseCase
+    deleteTransaction: DeleteTransactionUseCase
+  }
+  subscription: {
+    createSubscription: CreateSubscriptionUseCase
+    getSubscriptions: GetSubscriptionsUseCase
+    updateSubscription: UpdateSubscriptionUseCase
+    deleteSubscription: DeleteSubscriptionUseCase
+  }
   ai: {
     classify: ClassifyAndSaveUseCase
   }
@@ -120,6 +142,8 @@ export const containerPlugin = fp(async (app: FastifyInstance) => {
   const linkCategoryRepo = new PrismaLinkCategoryRepository(app.prisma)
   const linkRepo = new PrismaLinkRepository(app.prisma)
   const credentialRepo = new PrismaCredentialRepository(app.prisma)
+  const transactionRepo = new PrismaTransactionRepository(app.prisma)
+  const subscriptionRepo = new PrismaSubscriptionRepository(app.prisma)
 
   const container: Container = {
     auth: {
@@ -176,6 +200,18 @@ export const containerPlugin = fp(async (app: FastifyInstance) => {
       getCredentials: new GetCredentialsUseCase(credentialRepo),
       updateCredential: new UpdateCredentialUseCase(credentialRepo),
       deleteCredential: new DeleteCredentialUseCase(credentialRepo),
+    },
+    transaction: {
+      createTransaction: new CreateTransactionUseCase(transactionRepo),
+      getTransactions: new GetTransactionsUseCase(transactionRepo),
+      updateTransaction: new UpdateTransactionUseCase(transactionRepo),
+      deleteTransaction: new DeleteTransactionUseCase(transactionRepo),
+    },
+    subscription: {
+      createSubscription: new CreateSubscriptionUseCase(subscriptionRepo),
+      getSubscriptions: new GetSubscriptionsUseCase(subscriptionRepo),
+      updateSubscription: new UpdateSubscriptionUseCase(subscriptionRepo),
+      deleteSubscription: new DeleteSubscriptionUseCase(subscriptionRepo),
     },
     ai: {
       classify: new ClassifyAndSaveUseCase(

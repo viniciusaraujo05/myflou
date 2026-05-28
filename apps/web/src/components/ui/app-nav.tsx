@@ -67,6 +67,18 @@ const NAV_ITEMS = [
       </svg>
     ),
   },
+  {
+    label: 'Finance',
+    href: '/finance',
+    exact: false,
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor"
+        strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="10" cy="10" r="7" />
+        <path d="M10 6.5v7M7.5 8.5C7.5 7.4 8.6 6.5 10 6.5s2.5.9 2.5 2c0 2.5-5 2.5-5 5 0 1.1 1.1 2 2.5 2s2.5-.9 2.5-2" />
+      </svg>
+    ),
+  },
 ]
 
 function useActiveItem() {

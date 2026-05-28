@@ -9,6 +9,8 @@ import { linkCategoryRoutes } from './link-category.routes.js'
 import { linkRoutes } from './link.routes.js'
 import { aiRoutes } from './ai.routes.js'
 import { credentialRoutes } from './credential.routes.js'
+import { transactionRoutes } from './transaction.routes.js'
+import { subscriptionRoutes } from './subscription.routes.js'
 
 export async function registerRoutes(app: FastifyInstance) {
   await app.register(authRoutes, { prefix: '/auth' })
@@ -21,4 +23,6 @@ export async function registerRoutes(app: FastifyInstance) {
   await app.register(linkRoutes, { prefix: '/links' })
   await app.register(aiRoutes, { prefix: '/ai' })
   await app.register(credentialRoutes, { prefix: '/credentials' })
+  await app.register(transactionRoutes, { prefix: '/transactions' })
+  await app.register(subscriptionRoutes, { prefix: '/subscriptions' })
 }
