@@ -22,6 +22,7 @@ model User {
   spaces               Space[]
   milestones           Milestone[]
   inboxItems           InboxItem[]
+  timeSessions         TimeSession[]
   tasks                Task[]
   folders              Folder[]
   notes                Note[]
@@ -47,6 +48,7 @@ model Space {
   updatedAt     DateTime       @updatedAt
   tasks         Task[]
   milestones    Milestone[]
+  timeSessions  TimeSession[]
   folders       Folder[]
   notes         Note[]
   linkCategories LinkCategory[]
@@ -86,6 +88,7 @@ model Task {
   space       Space?   @relation(fields: [spaceId], references: [id], onDelete: SetNull)
   milestoneId String?
   milestone   Milestone? @relation(fields: [milestoneId], references: [id], onDelete: SetNull)
+  timeSessions TimeSession[]
   title       String
   date        DateTime @db.Date
   completed   Boolean  @default(false)
@@ -112,6 +115,26 @@ enum InboxStatus {
   PENDING
   PROCESSED
   DISMISSED
+}
+
+model TimeSession {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  spaceId     String?
+  space       Space?    @relation(fields: [spaceId], references: [id], onDelete: SetNull)
+  taskId      String?
+  task        Task?     @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  note        String?
+  startedAt   DateTime  @default(now())
+  endedAt     DateTime?
+  durationSec Int?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([userId])
+  @@index([userId, startedAt])
+  @@map("time_sessions")
 }
 
 model InboxItem {

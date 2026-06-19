@@ -6,6 +6,7 @@ import { Dialog, DialogPanel, Combobox, ComboboxInput, ComboboxOptions, Combobox
 import type { Status } from '@flou/shared'
 import { useSpaces } from '@/components/spaces/space-context'
 import { useTheme } from '@/components/theme/theme-provider'
+import { useFocus } from '@/components/focus/focus-context'
 import { apiFetch } from '@/lib/auth'
 import { SpaceFormDialog } from '@/components/spaces/space-form-dialog'
 import { MilestoneFormDialog } from '@/components/roadmap/milestone-form-dialog'
@@ -36,6 +37,7 @@ export function CommandPalette() {
   const router = useRouter()
   const { spaces, refresh } = useSpaces()
   const { toggle: toggleTheme } = useTheme()
+  const { active: activeFocus, start: startFocus, stop: stopFocus } = useFocus()
 
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState('')
@@ -69,6 +71,9 @@ export function CommandPalette() {
       { id: 'new-task', label: 'New task', group: 'Create', keywords: 'add create task', run: () => setTaskDialog(true) },
       { id: 'new-milestone', label: 'New milestone', group: 'Create', keywords: 'roadmap', run: () => setMilestoneDialog(true) },
       { id: 'new-space', label: 'New space', group: 'Create', run: () => setSpaceDialog(true) },
+      activeFocus
+        ? { id: 'stop-focus', label: 'Stop focus session', group: 'Actions', keywords: 'timer time tracking pomodoro', run: () => { void stopFocus() } }
+        : { id: 'start-focus', label: 'Start focus session', group: 'Actions', keywords: 'timer time tracking pomodoro', run: () => { void startFocus() } },
       { id: 'toggle-theme', label: 'Toggle light / dark theme', group: 'Actions', keywords: 'dark light mode appearance', run: toggleTheme },
       ...spaces.filter(s => !s.archived).map(s => ({
         id: `space-${s.id}`, label: `Open ${s.name}`, group: 'Spaces', keywords: s.name, run: go(`/space/${s.id}`),
@@ -76,7 +81,7 @@ export function CommandPalette() {
       ...VIEWS.map(v => ({ id: `view-${v.href}`, label: `Go to ${v.label}`, group: 'Views', keywords: v.label, run: go(v.href) })),
     ]
     return list
-  }, [spaces, router, toggleTheme])
+  }, [spaces, router, toggleTheme, activeFocus, startFocus, stopFocus])
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()

@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useParams, notFound } from 'next/navigation'
 import Link from 'next/link'
-import type { Task, NoteSummary, Link as LinkType, Credential, Subscription } from '@flou/shared'
+import type { Task, NoteSummary, Link as LinkType, Credential, Subscription, TimeSummary } from '@flou/shared'
 import { useSpaces } from '@/components/spaces/space-context'
 import { SpaceFormDialog } from '@/components/spaces/space-form-dialog'
 import { apiFetch } from '@/lib/auth'
@@ -39,6 +39,13 @@ function fmtHours(h: number): string {
   return h % 1 === 0 ? String(h) : h.toFixed(1)
 }
 
+function fmtDur(sec: number): string {
+  const h = Math.floor(sec / 3600)
+  const m = Math.floor((sec % 3600) / 60)
+  if (h === 0 && m === 0) return '0m'
+  return [h ? `${h}h` : '', m ? `${m}m` : ''].filter(Boolean).join(' ')
+}
+
 function computeInsights(tasks: Task[]) {
   const since7 = daysAgoStr(7)
   const since30 = daysAgoStr(30)
@@ -60,6 +67,7 @@ export default function SpaceOverviewPage() {
   const space = spaces.find(s => s.id === id)
 
   const [data, setData] = useState<SpaceData>(EMPTY)
+  const [summary, setSummary] = useState<TimeSummary | null>(null)
   const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState(false)
 
@@ -79,6 +87,10 @@ export default function SpaceOverviewPage() {
       }
     })
     return () => { active = false }
+  }, [id])
+
+  useEffect(() => {
+    apiFetch(`/api/time-sessions/summary?space=${id}`).then(r => (r.ok ? r.json() : null)).then(setSummary)
   }, [id])
 
   const insights = useMemo(() => computeInsights(data.tasks), [data.tasks])
@@ -121,6 +133,15 @@ export default function SpaceOverviewPage() {
           <Stat label="Done · 30d" value={insights.done30} />
           <Stat label="Hours · 7d" value={fmtHours(insights.hours7)} />
         </div>
+
+        {summary && (
+          <div className="mb-6 flex flex-wrap items-center gap-x-6 gap-y-1 rounded-xl px-4 py-3 text-[13px]" style={{ background: 'var(--bg2)' }}>
+            <span className="text-[11px] font-medium uppercase tracking-wide" style={{ color: 'var(--text3)' }}>Focus time</span>
+            <span style={{ color: 'var(--text2)' }}>Today <strong style={{ color: 'var(--text)' }}>{fmtDur(summary.todaySec)}</strong></span>
+            <span style={{ color: 'var(--text2)' }}>This week <strong style={{ color: 'var(--text)' }}>{fmtDur(summary.weekSec)}</strong></span>
+            <span style={{ color: 'var(--text2)' }}>This month <strong style={{ color: 'var(--text)' }}>{fmtDur(summary.monthSec)}</strong></span>
+          </div>
+        )}
 
         <div className="responsive-card-grid-wide">
           <Section title="Tasks" count={data.tasks.length} href={`/tasks?space=${id}`}

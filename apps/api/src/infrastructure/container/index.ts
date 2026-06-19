@@ -5,6 +5,7 @@ import { PrismaRefreshTokenRepository } from '../persistence/prisma-refresh-toke
 import { PrismaSpaceRepository } from '../persistence/prisma-space.repository.js'
 import { PrismaMilestoneRepository } from '../persistence/prisma-milestone.repository.js'
 import { PrismaInboxItemRepository } from '../persistence/prisma-inbox-item.repository.js'
+import { PrismaTimeSessionRepository } from '../persistence/prisma-time-session.repository.js'
 import { PrismaTaskRepository } from '../persistence/prisma-task.repository.js'
 import { PrismaFolderRepository } from '../persistence/prisma-folder.repository.js'
 import { PrismaNoteRepository } from '../persistence/prisma-note.repository.js'
@@ -28,6 +29,10 @@ import { CreateInboxItemUseCase } from '../../application/inbox/create-inbox-ite
 import { GetInboxItemsUseCase } from '../../application/inbox/get-inbox-items.usecase.js'
 import { UpdateInboxItemUseCase } from '../../application/inbox/update-inbox-item.usecase.js'
 import { DeleteInboxItemUseCase } from '../../application/inbox/delete-inbox-item.usecase.js'
+import { StartFocusUseCase } from '../../application/time-session/start-focus.usecase.js'
+import { StopFocusUseCase } from '../../application/time-session/stop-focus.usecase.js'
+import { GetActiveFocusUseCase } from '../../application/time-session/get-active-focus.usecase.js'
+import { GetTimeSummaryUseCase } from '../../application/time-session/get-time-summary.usecase.js'
 import { GetMeUseCase } from '../../application/user/get-me.usecase.js'
 import { UpdateProfileUseCase } from '../../application/user/update-profile.usecase.js'
 import { ChangePasswordUseCase } from '../../application/user/change-password.usecase.js'
@@ -105,6 +110,12 @@ export interface Container {
     updateItem: UpdateInboxItemUseCase
     deleteItem: DeleteInboxItemUseCase
   }
+  timeSession: {
+    start: StartFocusUseCase
+    stop: StopFocusUseCase
+    getActive: GetActiveFocusUseCase
+    getSummary: GetTimeSummaryUseCase
+  }
   task: {
     createTask: CreateTaskUseCase
     getTasks: GetTasksUseCase
@@ -172,6 +183,7 @@ export const containerPlugin = fp(async (app: FastifyInstance) => {
   const spaceRepo = new PrismaSpaceRepository(app.prisma)
   const milestoneRepo = new PrismaMilestoneRepository(app.prisma)
   const inboxRepo = new PrismaInboxItemRepository(app.prisma)
+  const timeSessionRepo = new PrismaTimeSessionRepository(app.prisma)
   const taskRepo = new PrismaTaskRepository(app.prisma)
   const folderRepo = new PrismaFolderRepository(app.prisma)
   const noteRepo = new PrismaNoteRepository(app.prisma)
@@ -211,6 +223,12 @@ export const containerPlugin = fp(async (app: FastifyInstance) => {
       getItems: new GetInboxItemsUseCase(inboxRepo),
       updateItem: new UpdateInboxItemUseCase(inboxRepo),
       deleteItem: new DeleteInboxItemUseCase(inboxRepo),
+    },
+    timeSession: {
+      start: new StartFocusUseCase(timeSessionRepo, spaceRepo, taskRepo),
+      stop: new StopFocusUseCase(timeSessionRepo),
+      getActive: new GetActiveFocusUseCase(timeSessionRepo),
+      getSummary: new GetTimeSummaryUseCase(timeSessionRepo),
     },
     task: {
       createTask: new CreateTaskUseCase(taskRepo, userRepo, spaceRepo, milestoneRepo),

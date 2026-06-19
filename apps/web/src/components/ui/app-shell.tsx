@@ -7,12 +7,15 @@ import { UserMenu } from '@/components/ui/user-menu'
 import { CaptureButton } from '@/components/capture/capture-button'
 import { CommandPalette } from '@/components/ui/command-palette'
 import { SpaceProvider } from '@/components/spaces/space-context'
+import { FocusProvider } from '@/components/focus/focus-context'
+import { FocusPill } from '@/components/focus/focus-pill'
 
 export function AppShell({ user, spaces, children }: { user: User; spaces: Space[]; children: React.ReactNode }) {
   const [collapsed, setCollapsed] = useState(false)
 
   return (
     <SpaceProvider initialSpaces={spaces}>
+    <FocusProvider>
       <div className="flex h-screen bg-[var(--bg)] p-3">
         <aside
           className="hidden shrink-0 flex-col rounded-2xl transition-all duration-200 lg:flex"
@@ -94,6 +97,8 @@ export function AppShell({ user, spaces, children }: { user: User; spaces: Space
       <BottomNav />
       <CaptureButton />
       <CommandPalette />
+      <FocusPill />
+    </FocusProvider>
     </SpaceProvider>
   )
 }

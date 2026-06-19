@@ -5,6 +5,7 @@ import { Dialog, DialogPanel, DialogTitle, Transition, TransitionChild } from '@
 import type { Task, Status, Milestone } from '@flou/shared'
 import { apiFetch } from '@/lib/auth'
 import { StatusManager } from '@/components/ui/status-manager'
+import { useFocus } from '@/components/focus/focus-context'
 
 interface TaskDetailDialogProps {
   task: Task | null
@@ -31,6 +32,8 @@ export function TaskDetailDialog({ task, statuses, onClose, onUpdated, onDeleted
   const [deleting, setDeleting] = useState(false)
   const [error, setError] = useState('')
   const [statusManagerOpen, setStatusManagerOpen] = useState(false)
+  const { active: activeFocus, start: startFocus, stop: stopFocus } = useFocus()
+  const focusingThis = activeFocus?.taskId === task?.id && task != null
 
   useEffect(() => {
     if (task) {
@@ -348,6 +351,18 @@ export function TaskDetailDialog({ task, statuses, onClose, onUpdated, onDeleted
                       }}
                     >
                       {deleting ? '…' : 'Delete'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { if (focusingThis) { void stopFocus() } else if (task) { void startFocus({ taskId: task.id, spaceId: task.spaceId }) } }}
+                      style={{
+                        padding: '8px 14px', borderRadius: 10, fontSize: 12, fontWeight: 500,
+                        border: '1px solid var(--divider)',
+                        color: focusingThis ? '#fff' : 'var(--accent)',
+                        background: focusingThis ? 'var(--accent)' : 'transparent', cursor: 'pointer',
+                      }}
+                    >
+                      {focusingThis ? 'Stop focus' : 'Start focus'}
                     </button>
                     <div style={{ flex: 1 }} />
                     <button
