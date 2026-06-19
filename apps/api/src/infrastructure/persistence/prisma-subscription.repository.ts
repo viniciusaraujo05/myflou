@@ -3,7 +3,7 @@ import { Subscription, type BillingCycle } from '../../domain/subscription/subsc
 import type { ISubscriptionRepository } from '../../domain/subscription/subscription.repository.js'
 
 function toEntity(row: {
-  id: string; userId: string; name: string; amount: number
+  id: string; userId: string; spaceId: string | null; name: string; amount: number
   billingCycle: string; nextBillingDate: Date; active: boolean
   description: string | null; category: string | null
   createdAt: Date; updatedAt: Date
@@ -11,6 +11,7 @@ function toEntity(row: {
   return Subscription.reconstitute({
     id: row.id,
     userId: row.userId,
+    spaceId: row.spaceId,
     name: row.name,
     amount: row.amount,
     billingCycle: row.billingCycle as BillingCycle,
@@ -26,14 +27,14 @@ function toEntity(row: {
 export class PrismaSubscriptionRepository implements ISubscriptionRepository {
   constructor(private readonly prisma: PrismaClient) {}
 
-  async create(userId: string, data: { name: string; amount: number; billingCycle: BillingCycle; nextBillingDate: Date; active?: boolean; description?: string | null; category?: string | null }) {
-    const row = await this.prisma.subscription.create({ data: { userId, ...data } })
+  async create(userId: string, data: { name: string; amount: number; billingCycle: BillingCycle; nextBillingDate: Date; active?: boolean; description?: string | null; category?: string | null; spaceId?: string | null }) {
+    const row = await this.prisma.subscription.create({ data: { userId, ...data, spaceId: data.spaceId ?? null } })
     return toEntity(row)
   }
 
-  async findByUserId(userId: string) {
+  async findByUserId(userId: string, spaceId?: string) {
     const rows = await this.prisma.subscription.findMany({
-      where: { userId },
+      where: { userId, ...(spaceId !== undefined ? { spaceId } : {}) },
       orderBy: { createdAt: 'desc' },
     })
     return rows.map(toEntity)
@@ -44,7 +45,7 @@ export class PrismaSubscriptionRepository implements ISubscriptionRepository {
     return row ? toEntity(row) : null
   }
 
-  async update(id: string, data: Partial<{ name: string; amount: number; billingCycle: BillingCycle; nextBillingDate: Date; active: boolean; description: string | null; category: string | null }>) {
+  async update(id: string, data: Partial<{ name: string; amount: number; billingCycle: BillingCycle; nextBillingDate: Date; active: boolean; description: string | null; category: string | null; spaceId: string | null }>) {
     const row = await this.prisma.subscription.update({ where: { id }, data })
     return toEntity(row)
   }

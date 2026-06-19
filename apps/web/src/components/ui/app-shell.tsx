@@ -1,16 +1,17 @@
 'use client'
 
 import { useState } from 'react'
-import type { User } from '@flou/shared'
+import type { User, Space } from '@flou/shared'
 import { SidebarNav, BottomNav } from '@/components/ui/app-nav'
 import { UserMenu } from '@/components/ui/user-menu'
 import { CaptureButton } from '@/components/capture/capture-button'
+import { SpaceProvider } from '@/components/spaces/space-context'
 
-export function AppShell({ user, children }: { user: User; children: React.ReactNode }) {
+export function AppShell({ user, spaces, children }: { user: User; spaces: Space[]; children: React.ReactNode }) {
   const [collapsed, setCollapsed] = useState(false)
 
   return (
-    <>
+    <SpaceProvider initialSpaces={spaces}>
       <div className="flex h-screen bg-[var(--bg)] p-3">
         <aside
           className="hidden shrink-0 flex-col rounded-2xl transition-all duration-200 lg:flex"
@@ -35,7 +36,7 @@ export function AppShell({ user, children }: { user: User; children: React.React
 
           <SidebarNav collapsed={collapsed} />
 
-          <div className="flex-1" />
+          <div className="mt-3" />
 
           <button
             onClick={() => setCollapsed(value => !value)}
@@ -91,6 +92,6 @@ export function AppShell({ user, children }: { user: User; children: React.React
 
       <BottomNav />
       <CaptureButton />
-    </>
+    </SpaceProvider>
   )
 }

@@ -4,8 +4,8 @@ import type { LinkCategoryDTO } from '../../domain/link-category/link-category.e
 export class GetLinkCategoriesUseCase {
   constructor(private readonly linkCategoryRepo: ILinkCategoryRepository) {}
 
-  async execute(userId: string): Promise<LinkCategoryDTO[]> {
-    const categories = await this.linkCategoryRepo.findByUser(userId)
+  async execute(userId: string, spaceId?: string): Promise<LinkCategoryDTO[]> {
+    const categories = await this.linkCategoryRepo.findByUser(userId, spaceId)
     return categories.map(c => c.toDTO())
   }
 }

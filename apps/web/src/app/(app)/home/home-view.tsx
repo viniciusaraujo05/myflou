@@ -276,6 +276,7 @@ export function HomeView({
         setNotes(prev => [{
           id: item.id,
           userId: user.id,
+          spaceId: null,
           folderId: null,
           title: item.title,
           createdAt: new Date().toISOString(),
@@ -286,6 +287,7 @@ export function HomeView({
         setLinks(prev => [{
           id: item.id,
           userId: user.id,
+          spaceId: null,
           categoryId: null,
           title: item.title,
           url: item.url ?? '',
@@ -300,6 +302,7 @@ export function HomeView({
         setCredentials(prev => [{
           id: item.id,
           userId: user.id,
+          spaceId: null,
           service: item.title,
           username: '',
           password: '',

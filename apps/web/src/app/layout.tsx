@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Lora, DM_Sans } from 'next/font/google'
 import './globals.css'
+import { ThemeProvider, themeNoFlashScript } from '@/components/theme/theme-provider'
 
 const lora = Lora({
   subsets: ['latin'],
@@ -22,9 +23,12 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`h-full ${lora.variable} ${dmSans.variable}`}>
+    <html lang="en" className={`h-full ${lora.variable} ${dmSans.variable}`} suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeNoFlashScript }} />
+      </head>
       <body className="h-full bg-[var(--bg)] font-sans text-[var(--text)] antialiased">
-        {children}
+        <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>
   )

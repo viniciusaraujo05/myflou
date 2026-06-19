@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-const PROTECTED = ['/home', '/calendar', '/notes', '/links', '/profile']
+const PROTECTED = ['/home', '/inbox', '/tasks', '/calendar', '/notes', '/links', '/passwords', '/finance', '/space', '/profile', '/preferences']
 const AUTH_ONLY  = ['/login', '/register']
 
 const API_URL =

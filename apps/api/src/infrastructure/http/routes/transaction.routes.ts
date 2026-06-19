@@ -10,6 +10,7 @@ const CreateSchema = z.object({
   category: z.string().min(1).max(100),
   description: z.string().max(500).nullable().optional(),
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  spaceId: z.string().nullable().optional(),
 })
 
 const UpdateSchema = CreateSchema.partial()
@@ -17,6 +18,7 @@ const UpdateSchema = CreateSchema.partial()
 const QuerySchema = z.object({
   from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
   to: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  space: z.string().optional(),
 })
 
 export async function transactionRoutes(app: FastifyInstance) {
@@ -25,8 +27,8 @@ export async function transactionRoutes(app: FastifyInstance) {
   app.get('/', auth, async (request, reply) => {
     const userId = getRequestUserId(request)
     const query = QuerySchema.safeParse(request.query)
-    const filters = query.success ? query.data : {}
-    const list = await app.container.transaction.getTransactions.execute({ userId, ...filters })
+    const { space, ...filters } = query.success ? query.data : {}
+    const list = await app.container.transaction.getTransactions.execute({ userId, ...filters, spaceId: space })
     return reply.send(list)
   })
 

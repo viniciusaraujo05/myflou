@@ -1,6 +1,6 @@
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
-import type { User } from '@flou/shared'
+import type { User, Space } from '@flou/shared'
 import { AppShell } from '@/components/ui/app-shell'
 
 const API =
@@ -8,11 +8,9 @@ const API =
   process.env.NEXT_PUBLIC_API_URL ||
   'http://localhost:3001'
 
-async function getUser(): Promise<User | null> {
-  const token = (await cookies()).get('access_token')?.value
-  if (!token) return null
+async function fetchJson<T>(path: string, token: string): Promise<T | null> {
   try {
-    const res = await fetch(`${API}/users/me`, {
+    const res = await fetch(`${API}${path}`, {
       headers: { Authorization: `Bearer ${token}` },
       cache: 'no-store',
     })
@@ -24,8 +22,13 @@ async function getUser(): Promise<User | null> {
 }
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
-  const user = await getUser()
+  const token = (await cookies()).get('access_token')?.value
+  if (!token) redirect('/login')
+
+  const user = await fetchJson<User>('/users/me', token)
   if (!user) redirect('/login')
 
-  return <AppShell user={user}>{children}</AppShell>
+  const spaces = (await fetchJson<Space[]>('/spaces', token)) ?? []
+
+  return <AppShell user={user} spaces={spaces}>{children}</AppShell>
 }

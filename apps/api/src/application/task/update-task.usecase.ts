@@ -1,5 +1,6 @@
 import type { ITaskRepository } from '../../domain/task/task.repository.js'
 import type { IUserRepository } from '../../domain/user/user.repository.js'
+import type { ISpaceRepository } from '../../domain/space/space.repository.js'
 import type { TaskDTO } from '../../domain/task/task.entity.js'
 import { TaskNotFoundError, TaskAccessDeniedError } from '../../domain/task/task.errors.js'
 import { InvalidRelationError } from '../../domain/shared/domain-error.js'
@@ -13,12 +14,14 @@ interface Input {
   description?: string | null
   hoursSpent?: number | null
   statusId?: string | null
+  spaceId?: string | null
 }
 
 export class UpdateTaskUseCase {
   constructor(
     private readonly taskRepo: ITaskRepository,
     private readonly userRepo: IUserRepository,
+    private readonly spaceRepo: ISpaceRepository,
   ) {}
 
   async execute(input: Input): Promise<TaskDTO> {
@@ -31,6 +34,10 @@ export class UpdateTaskUseCase {
         throw new InvalidRelationError('Status')
       }
     }
+    if (input.spaceId) {
+      const space = await this.spaceRepo.findById(input.spaceId)
+      if (!space || space.userId !== input.userId) throw new InvalidRelationError('Space')
+    }
 
     const data: {
       title?: string
@@ -39,6 +46,7 @@ export class UpdateTaskUseCase {
       description?: string | null
       hoursSpent?: number | null
       statusId?: string | null
+      spaceId?: string | null
     } = {}
 
     if (input.title !== undefined) data.title = input.title.trim()
@@ -47,6 +55,7 @@ export class UpdateTaskUseCase {
     if ('description' in input) data.description = input.description ?? null
     if ('hoursSpent' in input) data.hoursSpent = input.hoursSpent ?? null
     if ('statusId' in input) data.statusId = input.statusId ?? null
+    if ('spaceId' in input) data.spaceId = input.spaceId ?? null
 
     const updated = await this.taskRepo.update(input.taskId, data, input.userId)
     return updated.toDTO()

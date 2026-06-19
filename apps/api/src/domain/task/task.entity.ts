@@ -1,6 +1,7 @@
 export interface TaskProps {
   id: string
   userId: string
+  spaceId: string | null
   title: string
   date: Date
   completed: boolean
@@ -14,6 +15,7 @@ export interface TaskProps {
 export interface TaskDTO {
   id: string
   userId: string
+  spaceId: string | null
   title: string
   date: string   // ISO date string YYYY-MM-DD
   completed: boolean
@@ -33,6 +35,7 @@ export class Task {
 
   get id(): string { return this.props.id }
   get userId(): string { return this.props.userId }
+  get spaceId(): string | null { return this.props.spaceId }
   get title(): string { return this.props.title }
   get date(): Date { return this.props.date }
   get completed(): boolean { return this.props.completed }
@@ -46,6 +49,7 @@ export class Task {
     return {
       id: this.props.id,
       userId: this.props.userId,
+      spaceId: this.props.spaceId,
       title: this.props.title,
       date: this.props.date.toISOString().slice(0, 10),
       completed: this.props.completed,

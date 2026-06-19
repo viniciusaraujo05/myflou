@@ -12,16 +12,20 @@ const CreateSchema = z.object({
   active: z.boolean().optional(),
   description: z.string().max(500).nullable().optional(),
   category: z.string().max(100).nullable().optional(),
+  spaceId: z.string().nullable().optional(),
 })
 
 const UpdateSchema = CreateSchema.partial()
+const GetQuerySchema = z.object({ space: z.string().optional() })
 
 export async function subscriptionRoutes(app: FastifyInstance) {
   const auth = { preHandler: [app.authenticate] }
 
   app.get('/', auth, async (request, reply) => {
     const userId = getRequestUserId(request)
-    const list = await app.container.subscription.getSubscriptions.execute({ userId })
+    const query = GetQuerySchema.safeParse(request.query)
+    const space = query.success ? query.data.space : undefined
+    const list = await app.container.subscription.getSubscriptions.execute({ userId, spaceId: space })
     return reply.send(list)
   })
 

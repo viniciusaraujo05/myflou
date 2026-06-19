@@ -9,8 +9,9 @@ export interface ISubscriptionRepository {
     active?: boolean
     description?: string | null
     category?: string | null
+    spaceId?: string | null
   }): Promise<Subscription>
-  findByUserId(userId: string): Promise<Subscription[]>
+  findByUserId(userId: string, spaceId?: string): Promise<Subscription[]>
   findById(id: string): Promise<Subscription | null>
   update(id: string, data: Partial<{
     name: string
@@ -20,6 +21,7 @@ export interface ISubscriptionRepository {
     active: boolean
     description: string | null
     category: string | null
+    spaceId: string | null
   }>): Promise<Subscription>
   delete(id: string): Promise<void>
 }

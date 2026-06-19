@@ -8,8 +8,10 @@ async function authHeader(): Promise<Record<string, string>> {
   return token ? { Authorization: `Bearer ${token}` } : {}
 }
 
-export async function GET() {
-  const upstream = await fetch(`${API}/link-categories`, { headers: await authHeader(), cache: 'no-store' })
+export async function GET(req: NextRequest) {
+  const space = new URL(req.url).searchParams.get('space')
+  const suffix = space ? `?space=${space}` : ''
+  const upstream = await fetch(`${API}/link-categories${suffix}`, { headers: await authHeader(), cache: 'no-store' })
   const data = await upstream.json()
   return NextResponse.json(data, { status: upstream.status })
 }

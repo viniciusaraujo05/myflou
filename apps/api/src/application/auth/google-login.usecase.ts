@@ -4,6 +4,7 @@ import { Email } from '../../domain/user/value-objects/email.vo.js'
 import type { IUserRepository } from '../../domain/user/user.repository.js'
 import type { ITokenService, TokenPair } from '../../domain/auth/token.service.js'
 import type { IRefreshTokenRepository } from '../../domain/auth/refresh-token.repository.js'
+import type { ISpaceRepository } from '../../domain/space/space.repository.js'
 import type { UserDTO } from '../../domain/user/user.entity.js'
 
 const REFRESH_TOKEN_SLIDING_TTL_MS  = 30  * 24 * 60 * 60 * 1000
@@ -26,6 +27,7 @@ export class GoogleLoginUseCase {
     private readonly userRepo: IUserRepository,
     private readonly tokenService: ITokenService,
     private readonly refreshTokenRepo: IRefreshTokenRepository,
+    private readonly spaceRepo: ISpaceRepository,
   ) {}
 
   async execute(input: GoogleLoginInput): Promise<GoogleLoginOutput> {
@@ -41,6 +43,7 @@ export class GoogleLoginUseCase {
         // Create a new account
         const email = Email.create(input.email)
         user = await this.userRepo.createWithGoogle(email, input.googleId)
+        await this.spaceRepo.seedDefaults(user.id) // give the new account its default contexts
       }
     }
 

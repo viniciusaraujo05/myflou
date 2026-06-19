@@ -15,7 +15,8 @@ export async function linkRoutes(app: FastifyInstance) {
       })
     }
     const userId = getRequestUserId(request)
-    const links = await app.container.link.getLinks.execute({ userId, ...parsed.data })
+    const { space, ...rest } = parsed.data
+    const links = await app.container.link.getLinks.execute({ userId, ...rest, spaceId: space })
     return reply.send(links)
   })
 

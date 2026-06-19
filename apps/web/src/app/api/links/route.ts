@@ -11,8 +11,12 @@ async function authHeader(): Promise<Record<string, string>> {
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
   const categoryId = searchParams.get('categoryId')
-  const qs = categoryId ? `?categoryId=${categoryId}` : ''
-  const upstream = await fetch(`${API}/links${qs}`, { headers: await authHeader(), cache: 'no-store' })
+  const space = searchParams.get('space')
+  const qs = new URLSearchParams()
+  if (categoryId) qs.set('categoryId', categoryId)
+  if (space) qs.set('space', space)
+  const suffix = qs.toString() ? `?${qs}` : ''
+  const upstream = await fetch(`${API}/links${suffix}`, { headers: await authHeader(), cache: 'no-store' })
   const data = await upstream.json()
   return NextResponse.json(data, { status: upstream.status })
 }

@@ -34,6 +34,26 @@ Authentication uses **rotating httpOnly cookies**: a 15-minute access token and 
 
 ---
 
+## Spaces (V2)
+
+FLOU is organised around **Spaces** — context containers (Personal, Work, DOCSET, Nerdora,
+Cliniartico, Axians, Church) that every resource belongs to. Each resource (task, note,
+folder, link, link category, credential, transaction, subscription) carries a nullable
+`spaceId`; a `null` `spaceId` means the item is unassigned (the **Inbox**). Deleting a Space
+does not delete its resources — their `spaceId` is set to `null` (they fall back to the Inbox).
+
+- New accounts are seeded with the 7 default Spaces on register / first Google login.
+- `Space` is a full CRUD model (`GET/POST /spaces`, `PATCH/DELETE /spaces/:id`); ownership is
+  enforced per-user like every other resource.
+- Every resource list endpoint accepts a `?space=<id>` filter, forwarded by the matching BFF
+  route, so both **per-Space** views (`/space/[id]`) and **global** views (`/tasks`, `/notes`, …)
+  share the same API.
+
+The UI ships a light/dark theme toggle (Preferences); dark mode is a premium
+Linear/Notion-inspired palette driven by CSS custom properties under `[data-theme="dark"]`.
+
+---
+
 ## Menus
 
 ### Home
@@ -166,9 +186,11 @@ User account settings.
 
 ### Sidebar (desktop)
 
-Vertical navigation on the left side. Shows icon + label for each section. Active route is highlighted. Collapses to icon-only mode on narrow viewports.
+Vertical navigation on the left side, organised into three groups. Active route is highlighted; collapses to icon-only mode on narrow viewports.
 
-Items: **Home · Calendar · Notes · Links · Passwords**
+- **Spaces** — the user's contexts (dynamic, with color dots) plus a "+" to create one.
+- **Views** — global, cross-Space modules: **Home · Inbox · Tasks · Calendar · Notes · Links · Passwords · Finance**
+- **Settings** — **Profile · Preferences**
 
 ### Bottom Nav (mobile)
 

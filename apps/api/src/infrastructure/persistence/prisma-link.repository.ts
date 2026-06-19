@@ -4,7 +4,7 @@ import type { ILinkRepository } from '../../domain/link/link.repository.js'
 import { encrypt, decrypt } from '../crypto/encryption.service.js'
 
 type LinkRow = {
-  id: string; userId: string; categoryId: string | null
+  id: string; userId: string; spaceId: string | null; categoryId: string | null
   title: string; url: string; description: string | null
   username: string | null; password: string | null
   createdAt: Date; updatedAt: Date
@@ -32,7 +32,7 @@ function toEntity(r: LinkRow): Link {
 export class PrismaLinkRepository implements ILinkRepository {
   constructor(private readonly prisma: PrismaClient) {}
 
-  async create(userId: string, data: { title: string; url: string; description?: string | null; username?: string | null; password?: string | null; categoryId?: string | null }): Promise<Link> {
+  async create(userId: string, data: { title: string; url: string; description?: string | null; username?: string | null; password?: string | null; categoryId?: string | null; spaceId?: string | null }): Promise<Link> {
     const record = await this.prisma.link.create({
       data: {
         userId,
@@ -42,14 +42,16 @@ export class PrismaLinkRepository implements ILinkRepository {
         username: enc(data.username),
         password: enc(data.password),
         categoryId: data.categoryId ?? null,
+        spaceId: data.spaceId ?? null,
       },
     })
     return toEntity(record)
   }
 
-  async findByUser(userId: string, categoryId?: string | null): Promise<Link[]> {
-    const where: { userId: string; categoryId?: string | null } = { userId }
+  async findByUser(userId: string, categoryId?: string | null, spaceId?: string): Promise<Link[]> {
+    const where: { userId: string; categoryId?: string | null; spaceId?: string } = { userId }
     if (categoryId !== undefined) where.categoryId = categoryId
+    if (spaceId !== undefined) where.spaceId = spaceId
     const records = await this.prisma.link.findMany({ where, orderBy: { createdAt: 'desc' } })
     return records.map(r => toEntity(r))
   }
@@ -59,7 +61,7 @@ export class PrismaLinkRepository implements ILinkRepository {
     return record ? toEntity(record) : null
   }
 
-  async update(id: string, data: { title?: string; url?: string; description?: string | null; username?: string | null; password?: string | null; categoryId?: string | null }, userId: string): Promise<Link> {
+  async update(id: string, data: { title?: string; url?: string; description?: string | null; username?: string | null; password?: string | null; categoryId?: string | null; spaceId?: string | null }, userId: string): Promise<Link> {
     const patch: Record<string, unknown> = { ...data }
     if ('username' in data) patch.username = enc(data.username)
     if ('password' in data) patch.password = enc(data.password)

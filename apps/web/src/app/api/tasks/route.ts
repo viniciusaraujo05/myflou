@@ -13,8 +13,14 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
   const from = searchParams.get('from')
   const to = searchParams.get('to')
+  const space = searchParams.get('space')
 
-  const upstream = await fetch(`${API}/tasks?from=${from}&to=${to}`, {
+  const qs = new URLSearchParams()
+  if (from) qs.set('from', from)
+  if (to) qs.set('to', to)
+  if (space) qs.set('space', space)
+
+  const upstream = await fetch(`${API}/tasks?${qs}`, {
     headers: { ...(await authHeader()) },
     cache: 'no-store',
   })

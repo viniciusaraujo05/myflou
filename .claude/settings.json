@@ -1,11 +1,12 @@
 {
   "permissions": {
-    "additionalDirectories": [
-      "/home/varaujo-silva/test/FLOU/apps/web/src/app/api/tasks"
-    ],
     "allow": [
       "Bash(ls /home/varaujo-silva/test/FLOU/apps/api/src/infrastructure/persistence/prisma-task*)",
-      "Bash(ls /home/varaujo-silva/test/FLOU/apps/web/src/app/api/tasks/[id]/)"
+      "Bash(ls /home/varaujo-silva/test/FLOU/apps/web/src/app/api/tasks/[id]/)",
+      "Bash(xargs -I{} sh -c 'echo \"$\\(grep -c \"style={{\" \"{}\"\\) {}\"')"
+    ],
+    "additionalDirectories": [
+      "/home/varaujo-silva/test/FLOU/apps/web/src/app/api/tasks"
     ]
   }
 }

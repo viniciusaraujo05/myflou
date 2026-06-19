@@ -1,13 +1,21 @@
 import type { FastifyInstance } from 'fastify'
-import { CreateFolderSchema, UpdateFolderSchema } from '../schemas/folder.http-schema.js'
+import { CreateFolderSchema, UpdateFolderSchema, GetFoldersQuerySchema } from '../schemas/folder.http-schema.js'
 import { getRequestUserId } from '../request-user.js'
 
 export async function folderRoutes(app: FastifyInstance) {
   const auth = { preHandler: [app.authenticate] }
 
   app.get('/', auth, async (request, reply) => {
+    const parsed = GetFoldersQuerySchema.safeParse(request.query)
+    if (!parsed.success) {
+      return reply.status(400).send({
+        statusCode: 400,
+        message: parsed.error.issues[0]?.message ?? 'Validation error',
+        code: 'VALIDATION_ERROR',
+      })
+    }
     const userId = getRequestUserId(request)
-    const folders = await app.container.folder.getFolders.execute(userId)
+    const folders = await app.container.folder.getFolders.execute(userId, parsed.data.space)
     return reply.send(folders)
   })
 

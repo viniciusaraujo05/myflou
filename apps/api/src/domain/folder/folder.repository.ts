@@ -1,8 +1,8 @@
 import type { Folder } from './folder.entity.js'
 export interface IFolderRepository {
-  create(userId: string, name: string, color: string): Promise<Folder>
-  findByUser(userId: string): Promise<Folder[]>
+  create(userId: string, name: string, color: string, spaceId?: string | null): Promise<Folder>
+  findByUser(userId: string, spaceId?: string): Promise<Folder[]>
   findById(id: string): Promise<Folder | null>
-  update(id: string, data: { name?: string; color?: string }, userId: string): Promise<Folder>
+  update(id: string, data: { name?: string; color?: string; spaceId?: string | null }, userId: string): Promise<Folder>
   delete(id: string, userId: string): Promise<void>
 }

@@ -2,6 +2,7 @@ import fp from 'fastify-plugin'
 import type { FastifyInstance } from 'fastify'
 import { PrismaUserRepository } from '../persistence/prisma-user.repository.js'
 import { PrismaRefreshTokenRepository } from '../persistence/prisma-refresh-token.repository.js'
+import { PrismaSpaceRepository } from '../persistence/prisma-space.repository.js'
 import { PrismaTaskRepository } from '../persistence/prisma-task.repository.js'
 import { PrismaFolderRepository } from '../persistence/prisma-folder.repository.js'
 import { PrismaNoteRepository } from '../persistence/prisma-note.repository.js'
@@ -13,6 +14,10 @@ import { LoginUseCase } from '../../application/auth/login.usecase.js'
 import { RefreshUseCase } from '../../application/auth/refresh.usecase.js'
 import { LogoutUseCase } from '../../application/auth/logout.usecase.js'
 import { GoogleLoginUseCase } from '../../application/auth/google-login.usecase.js'
+import { CreateSpaceUseCase } from '../../application/space/create-space.usecase.js'
+import { GetSpacesUseCase } from '../../application/space/get-spaces.usecase.js'
+import { UpdateSpaceUseCase } from '../../application/space/update-space.usecase.js'
+import { DeleteSpaceUseCase } from '../../application/space/delete-space.usecase.js'
 import { GetMeUseCase } from '../../application/user/get-me.usecase.js'
 import { UpdateProfileUseCase } from '../../application/user/update-profile.usecase.js'
 import { ChangePasswordUseCase } from '../../application/user/change-password.usecase.js'
@@ -71,6 +76,12 @@ export interface Container {
     getMe: GetMeUseCase
     updateProfile: UpdateProfileUseCase
     changePassword: ChangePasswordUseCase
+  }
+  space: {
+    createSpace: CreateSpaceUseCase
+    getSpaces: GetSpacesUseCase
+    updateSpace: UpdateSpaceUseCase
+    deleteSpace: DeleteSpaceUseCase
   }
   task: {
     createTask: CreateTaskUseCase
@@ -136,6 +147,7 @@ export const containerPlugin = fp(async (app: FastifyInstance) => {
   const tokenService = new JwtTokenService(app)
   const userRepo = new PrismaUserRepository(app.prisma)
   const refreshTokenRepo = new PrismaRefreshTokenRepository(app.prisma)
+  const spaceRepo = new PrismaSpaceRepository(app.prisma)
   const taskRepo = new PrismaTaskRepository(app.prisma)
   const folderRepo = new PrismaFolderRepository(app.prisma)
   const noteRepo = new PrismaNoteRepository(app.prisma)
@@ -147,21 +159,27 @@ export const containerPlugin = fp(async (app: FastifyInstance) => {
 
   const container: Container = {
     auth: {
-      register: new RegisterUseCase(userRepo, tokenService, refreshTokenRepo),
+      register: new RegisterUseCase(userRepo, tokenService, refreshTokenRepo, spaceRepo),
       login: new LoginUseCase(userRepo, tokenService, refreshTokenRepo),
       refresh: new RefreshUseCase(tokenService, refreshTokenRepo),
       logout: new LogoutUseCase(refreshTokenRepo),
-      googleLogin: new GoogleLoginUseCase(userRepo, tokenService, refreshTokenRepo),
+      googleLogin: new GoogleLoginUseCase(userRepo, tokenService, refreshTokenRepo, spaceRepo),
     },
     user: {
       getMe: new GetMeUseCase(userRepo),
       updateProfile: new UpdateProfileUseCase(userRepo),
       changePassword: new ChangePasswordUseCase(userRepo),
     },
+    space: {
+      createSpace: new CreateSpaceUseCase(spaceRepo),
+      getSpaces: new GetSpacesUseCase(spaceRepo),
+      updateSpace: new UpdateSpaceUseCase(spaceRepo),
+      deleteSpace: new DeleteSpaceUseCase(spaceRepo),
+    },
     task: {
-      createTask: new CreateTaskUseCase(taskRepo, userRepo),
+      createTask: new CreateTaskUseCase(taskRepo, userRepo, spaceRepo),
       getTasks: new GetTasksUseCase(taskRepo),
-      updateTask: new UpdateTaskUseCase(taskRepo, userRepo),
+      updateTask: new UpdateTaskUseCase(taskRepo, userRepo, spaceRepo),
       deleteTask: new DeleteTaskUseCase(taskRepo),
     },
     status: {
@@ -171,46 +189,46 @@ export const containerPlugin = fp(async (app: FastifyInstance) => {
       deleteStatus: new DeleteStatusUseCase(userRepo),
     },
     folder: {
-      createFolder: new CreateFolderUseCase(folderRepo),
+      createFolder: new CreateFolderUseCase(folderRepo, spaceRepo),
       getFolders: new GetFoldersUseCase(folderRepo),
-      updateFolder: new UpdateFolderUseCase(folderRepo),
+      updateFolder: new UpdateFolderUseCase(folderRepo, spaceRepo),
       deleteFolder: new DeleteFolderUseCase(folderRepo),
     },
     note: {
-      createNote: new CreateNoteUseCase(noteRepo, folderRepo),
+      createNote: new CreateNoteUseCase(noteRepo, folderRepo, spaceRepo),
       getNotes: new GetNotesUseCase(noteRepo),
       getNote: new GetNoteUseCase(noteRepo),
-      updateNote: new UpdateNoteUseCase(noteRepo, folderRepo),
+      updateNote: new UpdateNoteUseCase(noteRepo, folderRepo, spaceRepo),
       deleteNote: new DeleteNoteUseCase(noteRepo),
     },
     linkCategory: {
-      createLinkCategory: new CreateLinkCategoryUseCase(linkCategoryRepo),
+      createLinkCategory: new CreateLinkCategoryUseCase(linkCategoryRepo, spaceRepo),
       getLinkCategories: new GetLinkCategoriesUseCase(linkCategoryRepo),
-      updateLinkCategory: new UpdateLinkCategoryUseCase(linkCategoryRepo),
+      updateLinkCategory: new UpdateLinkCategoryUseCase(linkCategoryRepo, spaceRepo),
       deleteLinkCategory: new DeleteLinkCategoryUseCase(linkCategoryRepo),
     },
     link: {
-      createLink: new CreateLinkUseCase(linkRepo, linkCategoryRepo),
+      createLink: new CreateLinkUseCase(linkRepo, linkCategoryRepo, spaceRepo),
       getLinks: new GetLinksUseCase(linkRepo),
-      updateLink: new UpdateLinkUseCase(linkRepo, linkCategoryRepo),
+      updateLink: new UpdateLinkUseCase(linkRepo, linkCategoryRepo, spaceRepo),
       deleteLink: new DeleteLinkUseCase(linkRepo),
     },
     credential: {
-      createCredential: new CreateCredentialUseCase(credentialRepo),
+      createCredential: new CreateCredentialUseCase(credentialRepo, spaceRepo),
       getCredentials: new GetCredentialsUseCase(credentialRepo),
-      updateCredential: new UpdateCredentialUseCase(credentialRepo),
+      updateCredential: new UpdateCredentialUseCase(credentialRepo, spaceRepo),
       deleteCredential: new DeleteCredentialUseCase(credentialRepo),
     },
     transaction: {
-      createTransaction: new CreateTransactionUseCase(transactionRepo),
+      createTransaction: new CreateTransactionUseCase(transactionRepo, spaceRepo),
       getTransactions: new GetTransactionsUseCase(transactionRepo),
-      updateTransaction: new UpdateTransactionUseCase(transactionRepo),
+      updateTransaction: new UpdateTransactionUseCase(transactionRepo, spaceRepo),
       deleteTransaction: new DeleteTransactionUseCase(transactionRepo),
     },
     subscription: {
-      createSubscription: new CreateSubscriptionUseCase(subscriptionRepo),
+      createSubscription: new CreateSubscriptionUseCase(subscriptionRepo, spaceRepo),
       getSubscriptions: new GetSubscriptionsUseCase(subscriptionRepo),
-      updateSubscription: new UpdateSubscriptionUseCase(subscriptionRepo),
+      updateSubscription: new UpdateSubscriptionUseCase(subscriptionRepo, spaceRepo),
       deleteSubscription: new DeleteSubscriptionUseCase(subscriptionRepo),
     },
     ai: {

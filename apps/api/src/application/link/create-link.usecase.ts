@@ -1,5 +1,6 @@
 import type { ILinkRepository } from '../../domain/link/link.repository.js'
 import type { ILinkCategoryRepository } from '../../domain/link-category/link-category.repository.js'
+import type { ISpaceRepository } from '../../domain/space/space.repository.js'
 import type { LinkDTO } from '../../domain/link/link.entity.js'
 import { InvalidRelationError } from '../../domain/shared/domain-error.js'
 
@@ -11,18 +12,24 @@ interface Input {
   username?: string | null
   password?: string | null
   categoryId?: string | null
+  spaceId?: string | null
 }
 
 export class CreateLinkUseCase {
   constructor(
     private readonly linkRepo: ILinkRepository,
     private readonly linkCategoryRepo: ILinkCategoryRepository,
+    private readonly spaceRepo: ISpaceRepository,
   ) {}
 
   async execute(input: Input): Promise<LinkDTO> {
     if (input.categoryId) {
       const category = await this.linkCategoryRepo.findById(input.categoryId)
       if (!category || category.userId !== input.userId) throw new InvalidRelationError('Link category')
+    }
+    if (input.spaceId) {
+      const space = await this.spaceRepo.findById(input.spaceId)
+      if (!space || space.userId !== input.userId) throw new InvalidRelationError('Space')
     }
     const link = await this.linkRepo.create(input.userId, {
       title: input.title,
@@ -31,6 +38,7 @@ export class CreateLinkUseCase {
       username: input.username ?? null,
       password: input.password ?? null,
       categoryId: input.categoryId ?? null,
+      spaceId: input.spaceId ?? null,
     })
     return link.toDTO()
   }

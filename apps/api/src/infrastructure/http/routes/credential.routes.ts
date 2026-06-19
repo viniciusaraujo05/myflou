@@ -8,16 +8,20 @@ const CreateSchema = z.object({
   password: z.string().min(1).max(1000),
   url: z.string().url().nullable().optional(),
   notes: z.string().max(2000).nullable().optional(),
+  spaceId: z.string().nullable().optional(),
 })
 
 const UpdateSchema = CreateSchema.partial()
+const GetQuerySchema = z.object({ space: z.string().optional() })
 
 export async function credentialRoutes(app: FastifyInstance) {
   const auth = { preHandler: [app.authenticate] }
 
   app.get('/', auth, async (request, reply) => {
+    const parsed = GetQuerySchema.safeParse(request.query)
+    if (!parsed.success) return reply.status(400).send({ statusCode: 400, message: parsed.error.issues[0]?.message ?? 'Validation error' })
     const userId = getRequestUserId(request)
-    const list = await app.container.credential.getCredentials.execute({ userId })
+    const list = await app.container.credential.getCredentials.execute({ userId, spaceId: parsed.data.space })
     return reply.send(list)
   })
 

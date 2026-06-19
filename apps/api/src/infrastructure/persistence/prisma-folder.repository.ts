@@ -5,14 +5,14 @@ import type { IFolderRepository } from '../../domain/folder/folder.repository.js
 export class PrismaFolderRepository implements IFolderRepository {
   constructor(private readonly prisma: PrismaClient) {}
 
-  async create(userId: string, name: string, color: string): Promise<Folder> {
-    const record = await this.prisma.folder.create({ data: { userId, name, color } })
+  async create(userId: string, name: string, color: string, spaceId?: string | null): Promise<Folder> {
+    const record = await this.prisma.folder.create({ data: { userId, name, color, spaceId: spaceId ?? null } })
     return this.toEntity(record)
   }
 
-  async findByUser(userId: string): Promise<Folder[]> {
+  async findByUser(userId: string, spaceId?: string): Promise<Folder[]> {
     const records = await this.prisma.folder.findMany({
-      where: { userId },
+      where: { userId, ...(spaceId !== undefined ? { spaceId } : {}) },
       orderBy: { createdAt: 'asc' },
     })
     return records.map(r => this.toEntity(r))
@@ -23,7 +23,7 @@ export class PrismaFolderRepository implements IFolderRepository {
     return record ? this.toEntity(record) : null
   }
 
-  async update(id: string, data: { name?: string; color?: string }, userId: string): Promise<Folder> {
+  async update(id: string, data: { name?: string; color?: string; spaceId?: string | null }, userId: string): Promise<Folder> {
     await this.prisma.folder.updateMany({ where: { id, userId }, data })
     const record = await this.prisma.folder.findUniqueOrThrow({ where: { id } })
     return this.toEntity(record)
@@ -36,6 +36,7 @@ export class PrismaFolderRepository implements IFolderRepository {
   private toEntity(record: {
     id: string
     userId: string
+    spaceId: string | null
     name: string
     color: string
     createdAt: Date
@@ -44,6 +45,7 @@ export class PrismaFolderRepository implements IFolderRepository {
     return Folder.reconstitute({
       id: record.id,
       userId: record.userId,
+      spaceId: record.spaceId,
       name: record.name,
       color: record.color,
       createdAt: record.createdAt,

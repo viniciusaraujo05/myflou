@@ -19,6 +19,7 @@ model User {
   createdAt            DateTime       @default(now())
   updatedAt            DateTime       @updatedAt
   refreshTokens        RefreshToken[]
+  spaces               Space[]
   tasks                Task[]
   folders              Folder[]
   notes                Note[]
@@ -29,6 +30,30 @@ model User {
   subscriptions        Subscription[]
 
   @@map("users")
+}
+
+model Space {
+  id            String         @id @default(cuid())
+  userId        String
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name          String
+  color         String         @default("#6366f1")
+  icon          String?
+  order         Int            @default(0)
+  archived      Boolean        @default(false)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  tasks         Task[]
+  folders       Folder[]
+  notes         Note[]
+  linkCategories LinkCategory[]
+  links         Link[]
+  credentials   Credential[]
+  transactions  Transaction[]
+  subscriptions Subscription[]
+
+  @@index([userId])
+  @@map("spaces")
 }
 
 model RefreshToken {
@@ -54,6 +79,8 @@ model Task {
   id          String   @id @default(cuid())
   userId      String
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  spaceId     String?
+  space       Space?   @relation(fields: [spaceId], references: [id], onDelete: SetNull)
   title       String
   date        DateTime @db.Date
   completed   Boolean  @default(false)
@@ -65,6 +92,7 @@ model Task {
 
   @@index([userId])
   @@index([userId, date])
+  @@index([userId, spaceId])
   @@map("tasks")
 }
 
@@ -72,6 +100,8 @@ model Folder {
   id        String   @id @default(cuid())
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  spaceId   String?
+  space     Space?   @relation(fields: [spaceId], references: [id], onDelete: SetNull)
   name      String
   color     String   @default("#6366f1")
   notes     Note[]
@@ -79,6 +109,7 @@ model Folder {
   updatedAt DateTime @updatedAt
 
   @@index([userId])
+  @@index([userId, spaceId])
   @@map("folders")
 }
 
@@ -86,6 +117,8 @@ model Note {
   id        String   @id @default(cuid())
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  spaceId   String?
+  space     Space?   @relation(fields: [spaceId], references: [id], onDelete: SetNull)
   folderId  String?
   folder    Folder?  @relation(fields: [folderId], references: [id], onDelete: SetNull)
   title     String   @default("Untitled")
@@ -95,6 +128,7 @@ model Note {
 
   @@index([userId])
   @@index([folderId])
+  @@index([userId, spaceId])
   @@map("notes")
 }
 
@@ -102,6 +136,8 @@ model LinkCategory {
   id        String   @id @default(cuid())
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  spaceId   String?
+  space     Space?   @relation(fields: [spaceId], references: [id], onDelete: SetNull)
   name      String
   color     String   @default("#6366f1")
   links     Link[]
@@ -109,6 +145,7 @@ model LinkCategory {
   updatedAt DateTime @updatedAt
 
   @@index([userId])
+  @@index([userId, spaceId])
   @@map("link_categories")
 }
 
@@ -116,6 +153,8 @@ model Link {
   id          String        @id @default(cuid())
   userId      String
   user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  spaceId     String?
+  space       Space?        @relation(fields: [spaceId], references: [id], onDelete: SetNull)
   categoryId  String?
   category    LinkCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   title       String
@@ -127,6 +166,7 @@ model Link {
   updatedAt   DateTime      @updatedAt
 
   @@index([userId])
+  @@index([userId, spaceId])
   @@map("links")
 }
 
@@ -134,6 +174,8 @@ model Credential {
   id        String   @id @default(cuid())
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  spaceId   String?
+  space     Space?   @relation(fields: [spaceId], references: [id], onDelete: SetNull)
   service   String
   username  String
   password  String
@@ -143,6 +185,7 @@ model Credential {
   updatedAt DateTime @updatedAt
 
   @@index([userId])
+  @@index([userId, spaceId])
   @@map("credentials")
 }
 
@@ -150,6 +193,8 @@ model Transaction {
   id          String          @id @default(cuid())
   userId      String
   user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  spaceId     String?
+  space       Space?          @relation(fields: [spaceId], references: [id], onDelete: SetNull)
   type        TransactionType
   amount      Float
   category    String
@@ -160,6 +205,7 @@ model Transaction {
 
   @@index([userId])
   @@index([userId, date])
+  @@index([userId, spaceId])
   @@map("transactions")
 }
 
@@ -167,6 +213,8 @@ model Subscription {
   id              String       @id @default(cuid())
   userId          String
   user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  spaceId         String?
+  space           Space?       @relation(fields: [spaceId], references: [id], onDelete: SetNull)
   name            String
   amount          Float
   billingCycle    BillingCycle
@@ -178,6 +226,7 @@ model Subscription {
   updatedAt       DateTime     @updatedAt
 
   @@index([userId])
+  @@index([userId, spaceId])
   @@map("subscriptions")
 }
 

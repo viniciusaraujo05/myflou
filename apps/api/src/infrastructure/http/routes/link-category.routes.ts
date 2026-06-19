@@ -1,13 +1,21 @@
 import type { FastifyInstance } from 'fastify'
-import { CreateLinkCategorySchema, UpdateLinkCategorySchema } from '../schemas/link-category.http-schema.js'
+import { CreateLinkCategorySchema, UpdateLinkCategorySchema, GetLinkCategoriesQuerySchema } from '../schemas/link-category.http-schema.js'
 import { getRequestUserId } from '../request-user.js'
 
 export async function linkCategoryRoutes(app: FastifyInstance) {
   const auth = { preHandler: [app.authenticate] }
 
   app.get('/', auth, async (request, reply) => {
+    const parsed = GetLinkCategoriesQuerySchema.safeParse(request.query)
+    if (!parsed.success) {
+      return reply.status(400).send({
+        statusCode: 400,
+        message: parsed.error.issues[0]?.message ?? 'Validation error',
+        code: 'VALIDATION_ERROR',
+      })
+    }
     const userId = getRequestUserId(request)
-    const categories = await app.container.linkCategory.getLinkCategories.execute(userId)
+    const categories = await app.container.linkCategory.getLinkCategories.execute(userId, parsed.data.space)
     return reply.send(categories)
   })
 

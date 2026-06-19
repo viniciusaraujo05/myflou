@@ -1,6 +1,7 @@
 export interface Task {
   id: string
   userId: string
+  spaceId: string | null
   title: string
   date: string       // YYYY-MM-DD
   completed: boolean

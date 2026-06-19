@@ -3,10 +3,11 @@ import type { TransactionDTO } from '../../domain/transaction/transaction.entity
 
 export class GetTransactionsUseCase {
   constructor(private readonly transactionRepo: ITransactionRepository) {}
-  async execute(input: { userId: string; from?: string; to?: string }): Promise<TransactionDTO[]> {
+  async execute(input: { userId: string; from?: string; to?: string; spaceId?: string }): Promise<TransactionDTO[]> {
     const list = await this.transactionRepo.findByUserId(input.userId, {
       from: input.from ? new Date(input.from) : undefined,
       to: input.to ? new Date(input.to) : undefined,
+      spaceId: input.spaceId,
     })
     return list.map(t => t.toDTO())
   }

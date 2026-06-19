@@ -4,6 +4,7 @@ export type BillingCycle = 'WEEKLY' | 'MONTHLY' | 'QUARTERLY' | 'YEARLY'
 export interface Transaction {
   id: string
   userId: string
+  spaceId: string | null
   type: TransactionType
   amount: number
   category: string
@@ -16,6 +17,7 @@ export interface Transaction {
 export interface Subscription {
   id: string
   userId: string
+  spaceId: string | null
   name: string
   amount: number
   billingCycle: BillingCycle

@@ -15,7 +15,8 @@ export async function noteRoutes(app: FastifyInstance) {
       })
     }
     const userId = getRequestUserId(request)
-    const notes = await app.container.note.getNotes.execute({ userId, ...parsed.data })
+    const { space, ...rest } = parsed.data
+    const notes = await app.container.note.getNotes.execute({ userId, ...rest, spaceId: space })
     return reply.send(notes)
   })
 

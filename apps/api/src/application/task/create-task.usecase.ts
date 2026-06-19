@@ -1,5 +1,6 @@
 import type { ITaskRepository } from '../../domain/task/task.repository.js'
 import type { IUserRepository } from '../../domain/user/user.repository.js'
+import type { ISpaceRepository } from '../../domain/space/space.repository.js'
 import type { TaskDTO } from '../../domain/task/task.entity.js'
 import { InvalidRelationError } from '../../domain/shared/domain-error.js'
 import { UserNotFoundError } from '../../domain/user/user.errors.js'
@@ -11,12 +12,14 @@ interface Input {
   description?: string | null
   hoursSpent?: number | null
   statusId?: string | null
+  spaceId?: string | null
 }
 
 export class CreateTaskUseCase {
   constructor(
     private readonly taskRepo: ITaskRepository,
     private readonly userRepo: IUserRepository,
+    private readonly spaceRepo: ISpaceRepository,
   ) {}
 
   async execute(input: Input): Promise<TaskDTO> {
@@ -24,6 +27,10 @@ export class CreateTaskUseCase {
     if (!user) throw new UserNotFoundError()
     if (input.statusId && !user.statuses.some(s => s.id === input.statusId)) {
       throw new InvalidRelationError('Status')
+    }
+    if (input.spaceId) {
+      const space = await this.spaceRepo.findById(input.spaceId)
+      if (!space || space.userId !== input.userId) throw new InvalidRelationError('Space')
     }
 
     const date = new Date(input.date + 'T00:00:00.000Z')
@@ -34,6 +41,7 @@ export class CreateTaskUseCase {
       input.description ?? null,
       input.hoursSpent ?? null,
       input.statusId ?? null,
+      input.spaceId ?? null,
     )
     return task.toDTO()
   }

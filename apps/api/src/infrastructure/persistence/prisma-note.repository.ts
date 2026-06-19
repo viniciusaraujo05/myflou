@@ -6,22 +6,24 @@ import type { INotRepository } from '../../domain/note/note.repository.js'
 export class PrismaNoteRepository implements INotRepository {
   constructor(private readonly prisma: PrismaClient) {}
 
-  async create(userId: string, title: string, folderId?: string | null): Promise<Note> {
+  async create(userId: string, title: string, folderId?: string | null, spaceId?: string | null): Promise<Note> {
     const record = await this.prisma.note.create({
-      data: { userId, title, folderId: folderId ?? null },
+      data: { userId, title, folderId: folderId ?? null, spaceId: spaceId ?? null },
     })
     return this.toEntity(record)
   }
 
-  async findByUser(userId: string, folderId?: string | null, search?: string): Promise<Note[]> {
+  async findByUser(userId: string, folderId?: string | null, search?: string, spaceId?: string): Promise<Note[]> {
     const where: Prisma.NoteWhereInput = { userId }
     if (folderId !== undefined) where.folderId = folderId
+    if (spaceId !== undefined) where.spaceId = spaceId
     if (search) where.title = { contains: search, mode: 'insensitive' }
     const records = await this.prisma.note.findMany({
       where,
       select: {
         id: true,
         userId: true,
+        spaceId: true,
         folderId: true,
         title: true,
         createdAt: true,
@@ -37,11 +39,12 @@ export class PrismaNoteRepository implements INotRepository {
     return record ? this.toEntity(record) : null
   }
 
-  async update(id: string, data: { title?: string; content?: unknown; folderId?: string | null }, userId: string): Promise<Note> {
+  async update(id: string, data: { title?: string; content?: unknown; folderId?: string | null; spaceId?: string | null }, userId: string): Promise<Note> {
     const updateData: Prisma.NoteUncheckedUpdateInput = {}
     if (data.title !== undefined) updateData.title = data.title
     if (data.content !== undefined) updateData.content = data.content as Prisma.InputJsonValue
     if ('folderId' in data) updateData.folderId = data.folderId ?? null
+    if ('spaceId' in data) updateData.spaceId = data.spaceId ?? null
     await this.prisma.note.updateMany({ where: { id, userId }, data: updateData })
     const record = await this.prisma.note.findUniqueOrThrow({ where: { id } })
     return this.toEntity(record)
@@ -54,6 +57,7 @@ export class PrismaNoteRepository implements INotRepository {
   private toEntity(record: {
     id: string
     userId: string
+    spaceId: string | null
     folderId: string | null
     title: string
     content?: unknown
@@ -63,6 +67,7 @@ export class PrismaNoteRepository implements INotRepository {
     return Note.reconstitute({
       id: record.id,
       userId: record.userId,
+      spaceId: record.spaceId,
       folderId: record.folderId,
       title: record.title,
       content: record.content,

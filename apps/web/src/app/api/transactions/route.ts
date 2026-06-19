@@ -12,10 +12,12 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
   const from = searchParams.get('from')
   const to = searchParams.get('to')
+  const space = searchParams.get('space')
 
   const params = new URLSearchParams()
   if (from) params.set('from', from)
   if (to) params.set('to', to)
+  if (space) params.set('space', space)
   const query = params.toString() ? `?${params}` : ''
 
   const upstream = await fetch(`${API}/transactions${query}`, {

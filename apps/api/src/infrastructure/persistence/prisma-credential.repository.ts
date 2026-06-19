@@ -4,7 +4,7 @@ import type { ICredentialRepository } from '../../domain/credential/credential.r
 import { encrypt, decrypt } from '../crypto/encryption.service.js'
 
 type CredentialRow = {
-  id: string; userId: string; service: string
+  id: string; userId: string; spaceId: string | null; service: string
   username: string; password: string
   url: string | null; notes: string | null
   createdAt: Date; updatedAt: Date
@@ -25,7 +25,7 @@ function toEntity(r: CredentialRow): Credential {
 export class PrismaCredentialRepository implements ICredentialRepository {
   constructor(private readonly prisma: PrismaClient) {}
 
-  async create(userId: string, data: { service: string; username: string; password: string; url?: string | null; notes?: string | null }): Promise<Credential> {
+  async create(userId: string, data: { service: string; username: string; password: string; url?: string | null; notes?: string | null; spaceId?: string | null }): Promise<Credential> {
     const r = await this.prisma.credential.create({
       data: {
         userId,
@@ -33,13 +33,14 @@ export class PrismaCredentialRepository implements ICredentialRepository {
         ...encryptRow({ username: data.username, password: data.password }),
         url: data.url ?? null,
         notes: data.notes ?? null,
+        spaceId: data.spaceId ?? null,
       },
     })
     return toEntity(r)
   }
 
-  async findByUser(userId: string): Promise<Credential[]> {
-    const rows = await this.prisma.credential.findMany({ where: { userId }, orderBy: { service: 'asc' } })
+  async findByUser(userId: string, spaceId?: string): Promise<Credential[]> {
+    const rows = await this.prisma.credential.findMany({ where: { userId, ...(spaceId !== undefined ? { spaceId } : {}) }, orderBy: { service: 'asc' } })
     return rows.map(toEntity)
   }
 
@@ -48,7 +49,7 @@ export class PrismaCredentialRepository implements ICredentialRepository {
     return r ? toEntity(r) : null
   }
 
-  async update(id: string, data: { service?: string; username?: string; password?: string; url?: string | null; notes?: string | null }, userId: string): Promise<Credential> {
+  async update(id: string, data: { service?: string; username?: string; password?: string; url?: string | null; notes?: string | null; spaceId?: string | null }, userId: string): Promise<Credential> {
     const encrypted: Record<string, unknown> = { ...data }
     if (data.username !== undefined) encrypted.username = encrypt(data.username)
     if (data.password !== undefined) encrypted.password = encrypt(data.password)

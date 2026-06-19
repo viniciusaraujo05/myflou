@@ -3,6 +3,7 @@ export type BillingCycle = 'WEEKLY' | 'MONTHLY' | 'QUARTERLY' | 'YEARLY'
 export interface SubscriptionProps {
   id: string
   userId: string
+  spaceId: string | null
   name: string
   amount: number
   billingCycle: BillingCycle
@@ -17,6 +18,7 @@ export interface SubscriptionProps {
 export interface SubscriptionDTO {
   id: string
   userId: string
+  spaceId: string | null
   name: string
   amount: number
   billingCycle: BillingCycle
@@ -33,6 +35,7 @@ export class Subscription {
   static reconstitute(props: SubscriptionProps) { return new Subscription(props) }
   get id() { return this.props.id }
   get userId() { return this.props.userId }
+  get spaceId() { return this.props.spaceId }
   get name() { return this.props.name }
   get amount() { return this.props.amount }
   get billingCycle() { return this.props.billingCycle }
@@ -46,6 +49,7 @@ export class Subscription {
     return {
       id: this.props.id,
       userId: this.props.userId,
+      spaceId: this.props.spaceId,
       name: this.props.name,
       amount: this.props.amount,
       billingCycle: this.props.billingCycle,

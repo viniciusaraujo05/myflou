@@ -20,6 +20,27 @@
   --rose:      oklch(0.88 0.04 18);
   --divider:   rgba(28, 24, 20, 0.08);
   --shadow:    0 1px 3px rgba(28,24,20,0.06), 0 4px 16px rgba(28,24,20,0.04);
+  --hover:     rgba(0,0,0,0.04);
+}
+
+/* Premium dark mode — Linear/Notion-inspired neutral palette */
+[data-theme="dark"] {
+  --bg:        #0E0E10;
+  --bg2:       #161618;
+  --bg3:       #222226;
+  --text:      #ECECEE;
+  --text2:     #9B9BA3;
+  --text3:     #6A6A72;
+  --accent:    oklch(0.72 0.12 155);
+  --accent-bg: oklch(0.32 0.06 155);
+  --sand:      oklch(0.32 0.03 78);
+  --sand-dark: oklch(0.42 0.05 78);
+  --lavender:  oklch(0.40 0.05 278);
+  --rose:      oklch(0.42 0.06 18);
+  --divider:   rgba(255, 255, 255, 0.08);
+  --shadow:    0 1px 3px rgba(0,0,0,0.4), 0 4px 16px rgba(0,0,0,0.3);
+  --hover:     rgba(255,255,255,0.05);
+  color-scheme: dark;
 }
 
 /* Thin, unobtrusive scrollbars */

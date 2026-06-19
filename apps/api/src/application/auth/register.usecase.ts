@@ -6,6 +6,7 @@ import { EmailAlreadyInUseError } from '../../domain/user/user.errors.js'
 import type { IUserRepository } from '../../domain/user/user.repository.js'
 import type { ITokenService, TokenPair } from '../../domain/auth/token.service.js'
 import type { IRefreshTokenRepository } from '../../domain/auth/refresh-token.repository.js'
+import type { ISpaceRepository } from '../../domain/space/space.repository.js'
 import type { UserDTO } from '../../domain/user/user.entity.js'
 
 const REFRESH_TOKEN_SLIDING_TTL_MS  = 30  * 24 * 60 * 60 * 1000  // 30 days
@@ -27,6 +28,7 @@ export class RegisterUseCase {
     private readonly userRepo: IUserRepository,
     private readonly tokenService: ITokenService,
     private readonly refreshTokenRepo: IRefreshTokenRepository,
+    private readonly spaceRepo: ISpaceRepository,
   ) {}
 
   async execute(input: RegisterInput): Promise<RegisterOutput> {
@@ -37,6 +39,7 @@ export class RegisterUseCase {
     if (existing) throw new EmailAlreadyInUseError()
 
     const user = await this.userRepo.create(email, password)
+    await this.spaceRepo.seedDefaults(user.id) // give the new account its default contexts
 
     const accessToken = this.tokenService.signAccessToken({ sub: user.id, email: user.email.value })
     const rawRefreshToken = this.tokenService.generateRefreshToken()

@@ -127,7 +127,7 @@ function TransactionDialog({
     e.preventDefault()
     if (!amount || !category || !date) return
     setSaving(true)
-    await onSave({ type, amount: parseFloat(amount), category, description: description || null, date }, transaction?.id)
+    await onSave({ type, amount: parseFloat(amount), category, description: description || null, date, spaceId: transaction?.spaceId ?? null }, transaction?.id)
     setSaving(false)
   }
 
@@ -265,7 +265,7 @@ function SubscriptionDialog({
     setSaving(true)
     await onSave({
       name, amount: parseFloat(amount), billingCycle, nextBillingDate, active,
-      description: description || null, category: category || null,
+      description: description || null, category: category || null, spaceId: subscription?.spaceId ?? null,
     }, subscription?.id)
     setSaving(false)
   }
