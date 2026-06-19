@@ -3,6 +3,7 @@ import { authRoutes } from './auth.routes.js'
 import { userRoutes } from './user.routes.js'
 import { spaceRoutes } from './space.routes.js'
 import { milestoneRoutes } from './milestone.routes.js'
+import { inboxRoutes } from './inbox.routes.js'
 import { taskRoutes } from './task.routes.js'
 import { statusRoutes } from './status.routes.js'
 import { folderRoutes } from './folder.routes.js'
@@ -19,6 +20,7 @@ export async function registerRoutes(app: FastifyInstance) {
   await app.register(userRoutes, { prefix: '/users' })
   await app.register(spaceRoutes, { prefix: '/spaces' })
   await app.register(milestoneRoutes, { prefix: '/milestones' })
+  await app.register(inboxRoutes, { prefix: '/inbox' })
   await app.register(taskRoutes, { prefix: '/tasks' })
   await app.register(statusRoutes, { prefix: '/statuses' })
   await app.register(folderRoutes, { prefix: '/folders' })

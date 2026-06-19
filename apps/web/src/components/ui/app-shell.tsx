@@ -5,6 +5,7 @@ import type { User, Space } from '@flou/shared'
 import { SidebarNav, BottomNav } from '@/components/ui/app-nav'
 import { UserMenu } from '@/components/ui/user-menu'
 import { CaptureButton } from '@/components/capture/capture-button'
+import { CommandPalette } from '@/components/ui/command-palette'
 import { SpaceProvider } from '@/components/spaces/space-context'
 
 export function AppShell({ user, spaces, children }: { user: User; spaces: Space[]; children: React.ReactNode }) {
@@ -92,6 +93,7 @@ export function AppShell({ user, spaces, children }: { user: User; spaces: Space
 
       <BottomNav />
       <CaptureButton />
+      <CommandPalette />
     </SpaceProvider>
   )
 }
