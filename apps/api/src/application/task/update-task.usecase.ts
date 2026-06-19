@@ -2,6 +2,7 @@ import type { ITaskRepository } from '../../domain/task/task.repository.js'
 import type { IUserRepository } from '../../domain/user/user.repository.js'
 import type { ISpaceRepository } from '../../domain/space/space.repository.js'
 import type { IMilestoneRepository } from '../../domain/milestone/milestone.repository.js'
+import type { IActivityRecorder } from '../../domain/activity/activity-recorder.js'
 import type { TaskDTO } from '../../domain/task/task.entity.js'
 import { TaskNotFoundError, TaskAccessDeniedError } from '../../domain/task/task.errors.js'
 import { InvalidRelationError } from '../../domain/shared/domain-error.js'
@@ -25,6 +26,7 @@ export class UpdateTaskUseCase {
     private readonly userRepo: IUserRepository,
     private readonly spaceRepo: ISpaceRepository,
     private readonly milestoneRepo: IMilestoneRepository,
+    private readonly activity: IActivityRecorder,
   ) {}
 
   async execute(input: Input): Promise<TaskDTO> {
@@ -67,6 +69,9 @@ export class UpdateTaskUseCase {
     if ('milestoneId' in input) data.milestoneId = input.milestoneId ?? null
 
     const updated = await this.taskRepo.update(input.taskId, data, input.userId)
+    if (input.completed === true && !task.completed) {
+      await this.activity.record({ userId: input.userId, spaceId: updated.spaceId, action: 'COMPLETED', resourceType: 'TASK', resourceId: updated.id, title: updated.title })
+    }
     return updated.toDTO()
   }
 }

@@ -1,5 +1,6 @@
 import type { ISubscriptionRepository } from '../../domain/subscription/subscription.repository.js'
 import type { ISpaceRepository } from '../../domain/space/space.repository.js'
+import type { IActivityRecorder } from '../../domain/activity/activity-recorder.js'
 import type { SubscriptionDTO, BillingCycle } from '../../domain/subscription/subscription.entity.js'
 import { InvalidRelationError } from '../../domain/shared/domain-error.js'
 
@@ -7,6 +8,7 @@ export class CreateSubscriptionUseCase {
   constructor(
     private readonly subscriptionRepo: ISubscriptionRepository,
     private readonly spaceRepo: ISpaceRepository,
+    private readonly activity: IActivityRecorder,
   ) {}
   async execute(input: {
     userId: string
@@ -33,6 +35,8 @@ export class CreateSubscriptionUseCase {
       category: input.category ?? null,
       spaceId: input.spaceId ?? null,
     })
-    return s.toDTO()
+    const dto = s.toDTO()
+    await this.activity.record({ userId: input.userId, spaceId: dto.spaceId, action: 'CREATED', resourceType: 'SUBSCRIPTION', resourceId: dto.id, title: dto.name })
+    return dto
   }
 }

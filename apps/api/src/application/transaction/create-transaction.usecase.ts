@@ -1,5 +1,6 @@
 import type { ITransactionRepository } from '../../domain/transaction/transaction.repository.js'
 import type { ISpaceRepository } from '../../domain/space/space.repository.js'
+import type { IActivityRecorder } from '../../domain/activity/activity-recorder.js'
 import type { TransactionDTO, TransactionType } from '../../domain/transaction/transaction.entity.js'
 import { InvalidRelationError } from '../../domain/shared/domain-error.js'
 
@@ -7,6 +8,7 @@ export class CreateTransactionUseCase {
   constructor(
     private readonly transactionRepo: ITransactionRepository,
     private readonly spaceRepo: ISpaceRepository,
+    private readonly activity: IActivityRecorder,
   ) {}
   async execute(input: {
     userId: string
@@ -29,6 +31,8 @@ export class CreateTransactionUseCase {
       date: new Date(input.date),
       spaceId: input.spaceId ?? null,
     })
-    return t.toDTO()
+    const dto = t.toDTO()
+    await this.activity.record({ userId: input.userId, spaceId: dto.spaceId, action: 'CREATED', resourceType: 'TRANSACTION', resourceId: dto.id, title: `${dto.category} · ${dto.amount}` })
+    return dto
   }
 }

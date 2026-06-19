@@ -1,5 +1,6 @@
 import type { IMilestoneRepository } from '../../domain/milestone/milestone.repository.js'
 import type { ISpaceRepository } from '../../domain/space/space.repository.js'
+import type { IActivityRecorder } from '../../domain/activity/activity-recorder.js'
 import type { MilestoneDTO, MilestoneStatus } from '../../domain/milestone/milestone.entity.js'
 import { MilestoneNotFoundError, MilestoneAccessDeniedError } from '../../domain/milestone/milestone.errors.js'
 import { InvalidRelationError } from '../../domain/shared/domain-error.js'
@@ -19,6 +20,7 @@ export class UpdateMilestoneUseCase {
   constructor(
     private readonly milestoneRepo: IMilestoneRepository,
     private readonly spaceRepo: ISpaceRepository,
+    private readonly activity: IActivityRecorder,
   ) {}
 
   async execute(input: Input): Promise<MilestoneDTO> {
@@ -39,6 +41,11 @@ export class UpdateMilestoneUseCase {
     if (input.order !== undefined) data.order = input.order
 
     const updated = await this.milestoneRepo.update(input.milestoneId, data, input.userId)
-    return updated.toDTO()
+    const dto = updated.toDTO()
+    if (input.status !== undefined && input.status !== milestone.status) {
+      const action = input.status === 'DONE' ? 'COMPLETED' : 'UPDATED'
+      await this.activity.record({ userId: input.userId, spaceId: dto.spaceId, action, resourceType: 'MILESTONE', resourceId: dto.id, title: dto.title, metadata: { status: input.status } })
+    }
+    return dto
   }
 }

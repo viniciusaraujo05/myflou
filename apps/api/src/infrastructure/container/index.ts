@@ -6,6 +6,10 @@ import { PrismaSpaceRepository } from '../persistence/prisma-space.repository.js
 import { PrismaMilestoneRepository } from '../persistence/prisma-milestone.repository.js'
 import { PrismaInboxItemRepository } from '../persistence/prisma-inbox-item.repository.js'
 import { PrismaTimeSessionRepository } from '../persistence/prisma-time-session.repository.js'
+import { PrismaResourceLinkRepository } from '../persistence/prisma-resource-link.repository.js'
+import { PrismaResourceResolver } from '../relation/prisma-resource-resolver.js'
+import { PrismaActivityEventRepository } from '../persistence/prisma-activity-event.repository.js'
+import { ActivityRecorder } from '../activity/activity-recorder.js'
 import { PrismaTaskRepository } from '../persistence/prisma-task.repository.js'
 import { PrismaFolderRepository } from '../persistence/prisma-folder.repository.js'
 import { PrismaNoteRepository } from '../persistence/prisma-note.repository.js'
@@ -33,6 +37,10 @@ import { StartFocusUseCase } from '../../application/time-session/start-focus.us
 import { StopFocusUseCase } from '../../application/time-session/stop-focus.usecase.js'
 import { GetActiveFocusUseCase } from '../../application/time-session/get-active-focus.usecase.js'
 import { GetTimeSummaryUseCase } from '../../application/time-session/get-time-summary.usecase.js'
+import { CreateRelationUseCase } from '../../application/relation/create-relation.usecase.js'
+import { GetRelationsUseCase } from '../../application/relation/get-relations.usecase.js'
+import { DeleteRelationUseCase } from '../../application/relation/delete-relation.usecase.js'
+import { GetActivityUseCase } from '../../application/activity/get-activity.usecase.js'
 import { GetMeUseCase } from '../../application/user/get-me.usecase.js'
 import { UpdateProfileUseCase } from '../../application/user/update-profile.usecase.js'
 import { ChangePasswordUseCase } from '../../application/user/change-password.usecase.js'
@@ -116,6 +124,14 @@ export interface Container {
     getActive: GetActiveFocusUseCase
     getSummary: GetTimeSummaryUseCase
   }
+  relation: {
+    createRelation: CreateRelationUseCase
+    getRelations: GetRelationsUseCase
+    deleteRelation: DeleteRelationUseCase
+  }
+  activity: {
+    getActivity: GetActivityUseCase
+  }
   task: {
     createTask: CreateTaskUseCase
     getTasks: GetTasksUseCase
@@ -192,6 +208,10 @@ export const containerPlugin = fp(async (app: FastifyInstance) => {
   const credentialRepo = new PrismaCredentialRepository(app.prisma)
   const transactionRepo = new PrismaTransactionRepository(app.prisma)
   const subscriptionRepo = new PrismaSubscriptionRepository(app.prisma)
+  const resourceLinkRepo = new PrismaResourceLinkRepository(app.prisma)
+  const resourceResolver = new PrismaResourceResolver(taskRepo, noteRepo, linkRepo, credentialRepo, transactionRepo, subscriptionRepo, milestoneRepo)
+  const activityRepo = new PrismaActivityEventRepository(app.prisma)
+  const activityRecorder = new ActivityRecorder(activityRepo, app.log)
 
   const container: Container = {
     auth: {
@@ -213,9 +233,9 @@ export const containerPlugin = fp(async (app: FastifyInstance) => {
       deleteSpace: new DeleteSpaceUseCase(spaceRepo),
     },
     milestone: {
-      createMilestone: new CreateMilestoneUseCase(milestoneRepo, spaceRepo),
+      createMilestone: new CreateMilestoneUseCase(milestoneRepo, spaceRepo, activityRecorder),
       getMilestones: new GetMilestonesUseCase(milestoneRepo),
-      updateMilestone: new UpdateMilestoneUseCase(milestoneRepo, spaceRepo),
+      updateMilestone: new UpdateMilestoneUseCase(milestoneRepo, spaceRepo, activityRecorder),
       deleteMilestone: new DeleteMilestoneUseCase(milestoneRepo),
     },
     inbox: {
@@ -230,11 +250,19 @@ export const containerPlugin = fp(async (app: FastifyInstance) => {
       getActive: new GetActiveFocusUseCase(timeSessionRepo),
       getSummary: new GetTimeSummaryUseCase(timeSessionRepo),
     },
+    relation: {
+      createRelation: new CreateRelationUseCase(resourceLinkRepo, resourceResolver),
+      getRelations: new GetRelationsUseCase(resourceLinkRepo, resourceResolver),
+      deleteRelation: new DeleteRelationUseCase(resourceLinkRepo),
+    },
+    activity: {
+      getActivity: new GetActivityUseCase(activityRepo),
+    },
     task: {
-      createTask: new CreateTaskUseCase(taskRepo, userRepo, spaceRepo, milestoneRepo),
+      createTask: new CreateTaskUseCase(taskRepo, userRepo, spaceRepo, milestoneRepo, activityRecorder),
       getTasks: new GetTasksUseCase(taskRepo),
-      updateTask: new UpdateTaskUseCase(taskRepo, userRepo, spaceRepo, milestoneRepo),
-      deleteTask: new DeleteTaskUseCase(taskRepo),
+      updateTask: new UpdateTaskUseCase(taskRepo, userRepo, spaceRepo, milestoneRepo, activityRecorder),
+      deleteTask: new DeleteTaskUseCase(taskRepo, activityRecorder),
     },
     status: {
       getStatuses: new GetStatusesUseCase(userRepo),
@@ -249,7 +277,7 @@ export const containerPlugin = fp(async (app: FastifyInstance) => {
       deleteFolder: new DeleteFolderUseCase(folderRepo),
     },
     note: {
-      createNote: new CreateNoteUseCase(noteRepo, folderRepo, spaceRepo),
+      createNote: new CreateNoteUseCase(noteRepo, folderRepo, spaceRepo, activityRecorder),
       getNotes: new GetNotesUseCase(noteRepo),
       getNote: new GetNoteUseCase(noteRepo),
       updateNote: new UpdateNoteUseCase(noteRepo, folderRepo, spaceRepo),
@@ -262,25 +290,25 @@ export const containerPlugin = fp(async (app: FastifyInstance) => {
       deleteLinkCategory: new DeleteLinkCategoryUseCase(linkCategoryRepo),
     },
     link: {
-      createLink: new CreateLinkUseCase(linkRepo, linkCategoryRepo, spaceRepo),
+      createLink: new CreateLinkUseCase(linkRepo, linkCategoryRepo, spaceRepo, activityRecorder),
       getLinks: new GetLinksUseCase(linkRepo),
       updateLink: new UpdateLinkUseCase(linkRepo, linkCategoryRepo, spaceRepo),
       deleteLink: new DeleteLinkUseCase(linkRepo),
     },
     credential: {
-      createCredential: new CreateCredentialUseCase(credentialRepo, spaceRepo),
+      createCredential: new CreateCredentialUseCase(credentialRepo, spaceRepo, activityRecorder),
       getCredentials: new GetCredentialsUseCase(credentialRepo),
       updateCredential: new UpdateCredentialUseCase(credentialRepo, spaceRepo),
       deleteCredential: new DeleteCredentialUseCase(credentialRepo),
     },
     transaction: {
-      createTransaction: new CreateTransactionUseCase(transactionRepo, spaceRepo),
+      createTransaction: new CreateTransactionUseCase(transactionRepo, spaceRepo, activityRecorder),
       getTransactions: new GetTransactionsUseCase(transactionRepo),
       updateTransaction: new UpdateTransactionUseCase(transactionRepo, spaceRepo),
       deleteTransaction: new DeleteTransactionUseCase(transactionRepo),
     },
     subscription: {
-      createSubscription: new CreateSubscriptionUseCase(subscriptionRepo, spaceRepo),
+      createSubscription: new CreateSubscriptionUseCase(subscriptionRepo, spaceRepo, activityRecorder),
       getSubscriptions: new GetSubscriptionsUseCase(subscriptionRepo),
       updateSubscription: new UpdateSubscriptionUseCase(subscriptionRepo, spaceRepo),
       deleteSubscription: new DeleteSubscriptionUseCase(subscriptionRepo),

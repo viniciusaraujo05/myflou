@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useParams, notFound } from 'next/navigation'
 import Link from 'next/link'
-import type { Task, NoteSummary, Link as LinkType, Credential, Subscription, TimeSummary } from '@flou/shared'
+import type { Task, NoteSummary, Link as LinkType, Credential, Subscription, TimeSummary, ActivityEvent } from '@flou/shared'
 import { useSpaces } from '@/components/spaces/space-context'
 import { SpaceFormDialog } from '@/components/spaces/space-form-dialog'
 import { apiFetch } from '@/lib/auth'
@@ -46,6 +46,25 @@ function fmtDur(sec: number): string {
   return [h ? `${h}h` : '', m ? `${m}m` : ''].filter(Boolean).join(' ')
 }
 
+const ACTION_LABEL: Record<string, string> = { CREATED: 'Created', UPDATED: 'Updated', COMPLETED: 'Completed', DELETED: 'Deleted' }
+const ACTION_COLOR: Record<string, string> = { CREATED: '#10b981', UPDATED: '#0ea5e9', COMPLETED: '#6366f1', DELETED: '#ef4444' }
+const RESOURCE_LABEL: Record<string, string> = {
+  TASK: 'task', NOTE: 'note', LINK: 'link', CREDENTIAL: 'password',
+  TRANSACTION: 'transaction', SUBSCRIPTION: 'subscription', MILESTONE: 'milestone',
+}
+
+function relativeTime(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime()
+  const m = Math.floor(diff / 60000)
+  if (m < 1) return 'just now'
+  if (m < 60) return `${m}m ago`
+  const h = Math.floor(m / 60)
+  if (h < 24) return `${h}h ago`
+  const d = Math.floor(h / 24)
+  if (d < 7) return `${d}d ago`
+  return new Date(iso).toLocaleDateString()
+}
+
 function computeInsights(tasks: Task[]) {
   const since7 = daysAgoStr(7)
   const since30 = daysAgoStr(30)
@@ -68,6 +87,7 @@ export default function SpaceOverviewPage() {
 
   const [data, setData] = useState<SpaceData>(EMPTY)
   const [summary, setSummary] = useState<TimeSummary | null>(null)
+  const [activity, setActivity] = useState<ActivityEvent[]>([])
   const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState(false)
 
@@ -91,6 +111,7 @@ export default function SpaceOverviewPage() {
 
   useEffect(() => {
     apiFetch(`/api/time-sessions/summary?space=${id}`).then(r => (r.ok ? r.json() : null)).then(setSummary)
+    apiFetch(`/api/activity?space=${id}&limit=15`).then(r => (r.ok ? r.json() : [])).then(setActivity)
   }, [id])
 
   const insights = useMemo(() => computeInsights(data.tasks), [data.tasks])
@@ -156,6 +177,26 @@ export default function SpaceOverviewPage() {
             items={data.credentials} render={c => <span style={{ color: 'var(--text)' }}>{c.service}</span>} />
           <Section title="Subscriptions" count={data.subscriptions.length} href="/finance"
             items={data.subscriptions} render={s => <span style={{ color: 'var(--text)' }}>{s.name}</span>} />
+        </div>
+
+        <div className="mt-8">
+          <p className="mb-3 text-[12px] font-medium uppercase tracking-wide" style={{ color: 'var(--text3)' }}>Activity</p>
+          {activity.length === 0 ? (
+            <p className="text-[13px]" style={{ color: 'var(--text3)' }}>No activity yet.</p>
+          ) : (
+            <ul className="flex flex-col">
+              {activity.map((e, i) => (
+                <li key={e.id} className="flex items-center gap-3 py-2" style={{ borderTop: i === 0 ? 'none' : '1px solid var(--divider)' }}>
+                  <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: ACTION_COLOR[e.action] }} />
+                  <span className="flex-1 text-[13px]" style={{ color: 'var(--text)' }}>
+                    <span style={{ color: 'var(--text2)' }}>{ACTION_LABEL[e.action]} {RESOURCE_LABEL[e.resourceType]} · </span>
+                    {e.title}
+                  </span>
+                  <span className="shrink-0 text-[12px]" style={{ color: 'var(--text3)' }}>{relativeTime(e.createdAt)}</span>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
         </>
       )}

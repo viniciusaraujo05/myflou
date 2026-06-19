@@ -2,6 +2,7 @@ import type { ITaskRepository } from '../../domain/task/task.repository.js'
 import type { IUserRepository } from '../../domain/user/user.repository.js'
 import type { ISpaceRepository } from '../../domain/space/space.repository.js'
 import type { IMilestoneRepository } from '../../domain/milestone/milestone.repository.js'
+import type { IActivityRecorder } from '../../domain/activity/activity-recorder.js'
 import type { TaskDTO } from '../../domain/task/task.entity.js'
 import { InvalidRelationError } from '../../domain/shared/domain-error.js'
 import { UserNotFoundError } from '../../domain/user/user.errors.js'
@@ -23,6 +24,7 @@ export class CreateTaskUseCase {
     private readonly userRepo: IUserRepository,
     private readonly spaceRepo: ISpaceRepository,
     private readonly milestoneRepo: IMilestoneRepository,
+    private readonly activity: IActivityRecorder,
   ) {}
 
   async execute(input: Input): Promise<TaskDTO> {
@@ -51,6 +53,7 @@ export class CreateTaskUseCase {
       input.spaceId ?? null,
       input.milestoneId ?? null,
     )
+    await this.activity.record({ userId: input.userId, spaceId: task.spaceId, action: 'CREATED', resourceType: 'TASK', resourceId: task.id, title: task.title })
     return task.toDTO()
   }
 }

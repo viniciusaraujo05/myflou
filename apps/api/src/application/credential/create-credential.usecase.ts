@@ -1,5 +1,6 @@
 import type { ICredentialRepository } from '../../domain/credential/credential.repository.js'
 import type { ISpaceRepository } from '../../domain/space/space.repository.js'
+import type { IActivityRecorder } from '../../domain/activity/activity-recorder.js'
 import type { CredentialDTO } from '../../domain/credential/credential.entity.js'
 import { InvalidRelationError } from '../../domain/shared/domain-error.js'
 
@@ -7,6 +8,7 @@ export class CreateCredentialUseCase {
   constructor(
     private readonly credentialRepo: ICredentialRepository,
     private readonly spaceRepo: ISpaceRepository,
+    private readonly activity: IActivityRecorder,
   ) {}
   async execute(input: { userId: string; service: string; username: string; password: string; url?: string | null; notes?: string | null; spaceId?: string | null }): Promise<CredentialDTO> {
     if (input.spaceId) {
@@ -14,6 +16,8 @@ export class CreateCredentialUseCase {
       if (!space || space.userId !== input.userId) throw new InvalidRelationError('Space')
     }
     const c = await this.credentialRepo.create(input.userId, { service: input.service, username: input.username, password: input.password, url: input.url ?? null, notes: input.notes ?? null, spaceId: input.spaceId ?? null })
-    return c.toDTO()
+    const dto = c.toDTO()
+    await this.activity.record({ userId: input.userId, spaceId: dto.spaceId, action: 'CREATED', resourceType: 'CREDENTIAL', resourceId: dto.id, title: dto.service })
+    return dto
   }
 }

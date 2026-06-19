@@ -23,6 +23,8 @@ model User {
   milestones           Milestone[]
   inboxItems           InboxItem[]
   timeSessions         TimeSession[]
+  resourceLinks        ResourceLink[]
+  activityEvents       ActivityEvent[]
   tasks                Task[]
   folders              Folder[]
   notes                Note[]
@@ -49,6 +51,7 @@ model Space {
   tasks         Task[]
   milestones    Milestone[]
   timeSessions  TimeSession[]
+  activityEvents ActivityEvent[]
   folders       Folder[]
   notes         Note[]
   linkCategories LinkCategory[]
@@ -115,6 +118,57 @@ enum InboxStatus {
   PENDING
   PROCESSED
   DISMISSED
+}
+
+enum ResourceType {
+  TASK
+  NOTE
+  LINK
+  CREDENTIAL
+  TRANSACTION
+  SUBSCRIPTION
+  MILESTONE
+}
+
+enum ActivityAction {
+  CREATED
+  UPDATED
+  COMPLETED
+  DELETED
+}
+
+model ActivityEvent {
+  id           String         @id @default(cuid())
+  userId       String
+  user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  spaceId      String?
+  space        Space?         @relation(fields: [spaceId], references: [id], onDelete: SetNull)
+  action       ActivityAction
+  resourceType ResourceType
+  resourceId   String
+  title        String
+  metadata     Json?
+  createdAt    DateTime       @default(now())
+
+  @@index([userId, createdAt])
+  @@index([userId, spaceId, createdAt])
+  @@map("activity_events")
+}
+
+model ResourceLink {
+  id        String       @id @default(cuid())
+  userId    String
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fromType  ResourceType
+  fromId    String
+  toType    ResourceType
+  toId      String
+  createdAt DateTime     @default(now())
+
+  @@unique([userId, fromType, fromId, toType, toId])
+  @@index([userId, fromType, fromId])
+  @@index([userId, toType, toId])
+  @@map("resource_links")
 }
 
 model TimeSession {

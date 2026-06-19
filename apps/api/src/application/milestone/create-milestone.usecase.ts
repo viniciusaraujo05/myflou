@@ -1,5 +1,6 @@
 import type { IMilestoneRepository } from '../../domain/milestone/milestone.repository.js'
 import type { ISpaceRepository } from '../../domain/space/space.repository.js'
+import type { IActivityRecorder } from '../../domain/activity/activity-recorder.js'
 import type { MilestoneDTO, MilestoneStatus } from '../../domain/milestone/milestone.entity.js'
 import { InvalidRelationError } from '../../domain/shared/domain-error.js'
 
@@ -17,6 +18,7 @@ export class CreateMilestoneUseCase {
   constructor(
     private readonly milestoneRepo: IMilestoneRepository,
     private readonly spaceRepo: ISpaceRepository,
+    private readonly activity: IActivityRecorder,
   ) {}
 
   async execute(input: Input): Promise<MilestoneDTO> {
@@ -32,6 +34,8 @@ export class CreateMilestoneUseCase {
       spaceId: input.spaceId ?? null,
       order: input.order,
     })
-    return milestone.toDTO()
+    const dto = milestone.toDTO()
+    await this.activity.record({ userId: input.userId, spaceId: dto.spaceId, action: 'CREATED', resourceType: 'MILESTONE', resourceId: dto.id, title: dto.title })
+    return dto
   }
 }

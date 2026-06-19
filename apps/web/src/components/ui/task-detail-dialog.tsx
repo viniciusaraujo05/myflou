@@ -6,6 +6,7 @@ import type { Task, Status, Milestone } from '@flou/shared'
 import { apiFetch } from '@/lib/auth'
 import { StatusManager } from '@/components/ui/status-manager'
 import { useFocus } from '@/components/focus/focus-context'
+import { RelatedPanel } from '@/components/relations/related-panel'
 
 interface TaskDetailDialogProps {
   task: Task | null
@@ -295,6 +296,9 @@ export function TaskDetailDialog({ task, statuses, onClose, onUpdated, onDeleted
                         </select>
                       </div>
                     )}
+
+                    {/* Related resources */}
+                    {task && <RelatedPanel anchorType="TASK" anchorId={task.id} />}
 
                     {/* Hours spent */}
                     <div>
