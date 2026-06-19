@@ -43,10 +43,47 @@
   color-scheme: dark;
 }
 
+/*
+ * Design tokens (above):
+ *   --bg/--bg2/--bg3  surface elevation (page → panel → raised)
+ *   --text/2/3        text emphasis (primary → secondary → muted)
+ *   --accent          brand/action color · --accent-bg its tint
+ *   --divider         hairline borders · --hover  hover wash
+ *   --shadow          elevation · both themes redefine all of the above
+ */
+
 /* Thin, unobtrusive scrollbars */
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--bg3); border-radius: 2px; }
+* { scrollbar-width: thin; scrollbar-color: var(--bg3) transparent; }
+
+/* Text selection picks up the brand tint */
+::selection { background: var(--accent-bg); color: var(--text); }
+
+/* Keyboard focus ring — low specificity (:where) so inline styles can still opt out */
+:where(a, button, [role="button"], input, textarea, select):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+/* Smooth the many JS-driven hover state changes (nav, list rows, pills) */
+:where(a, button) {
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease, opacity 0.15s ease, transform 0.15s ease;
+}
+
+/* Tighter optical rhythm for serif display headings */
+:where(h1, h2, h3) { letter-spacing: -0.012em; }
+
+/* Respect users who prefer less motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
 
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(6px); }

@@ -45,7 +45,6 @@ export function TaskDialog({ open, initialDate, onClose, onCreated }: TaskDialog
     }
   }
 
-  // Format date label for the header
   const dateLabel = (() => {
     try {
       const [y, m, d] = date.split('-').map(Number)
@@ -55,111 +54,87 @@ export function TaskDialog({ open, initialDate, onClose, onCreated }: TaskDialog
     } catch { return date }
   })()
 
+  const field: React.CSSProperties = {
+    width: '100%', fontSize: 14, padding: '9px 12px', borderRadius: 10,
+    border: '1.5px solid var(--divider)', background: 'var(--bg2)',
+    color: 'var(--text)', outline: 'none', boxSizing: 'border-box',
+  }
+
   return (
     <Transition show={open}>
       <Dialog onClose={onClose} className="relative z-50" initialFocus={inputRef}>
-
-        {/* Backdrop */}
         <TransitionChild
-          enter="ease-out duration-200"
-          enterFrom="opacity-0"
-          enterTo="opacity-100"
-          leave="ease-in duration-150"
-          leaveFrom="opacity-100"
-          leaveTo="opacity-0"
+          enter="ease-out duration-200" enterFrom="opacity-0" enterTo="opacity-100"
+          leave="ease-in duration-150" leaveFrom="opacity-100" leaveTo="opacity-0"
         >
-          <div className="fixed inset-0 bg-stone-900/25 backdrop-blur-[2px]" aria-hidden="true" />
+          <div className="fixed inset-0" style={{ background: 'rgba(15,12,10,0.5)', backdropFilter: 'blur(2px)' }} aria-hidden="true" />
         </TransitionChild>
 
-        {/* Panel */}
         <div className="fixed inset-0 flex items-center justify-center p-4">
           <TransitionChild
-            enter="ease-out duration-200"
-            enterFrom="opacity-0 scale-[0.97] translate-y-1"
-            enterTo="opacity-100 scale-100 translate-y-0"
-            leave="ease-in duration-150"
-            leaveFrom="opacity-100 scale-100"
-            leaveTo="opacity-0 scale-[0.97]"
+            enter="ease-out duration-200" enterFrom="opacity-0 scale-[0.97] translate-y-1" enterTo="opacity-100 scale-100 translate-y-0"
+            leave="ease-in duration-150" leaveFrom="opacity-100 scale-100" leaveTo="opacity-0 scale-[0.97]"
           >
-            <DialogPanel className="w-full max-w-[400px] overflow-hidden rounded-2xl bg-white shadow-2xl shadow-stone-900/10 ring-1 ring-stone-900/5">
-
-              {/* Warm header strip */}
-              <div className="bg-[#f5f0eb] px-6 py-5">
-                <div className="flex items-start justify-between">
+            <DialogPanel
+              className="w-full max-w-[400px] overflow-hidden rounded-2xl"
+              style={{ background: 'var(--bg)', boxShadow: 'var(--shadow)', border: '1px solid var(--divider)' }}
+            >
+              {/* Header */}
+              <div style={{ background: 'var(--bg2)', padding: '20px 24px', borderBottom: '1px solid var(--divider)' }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
                   <div>
-                    <DialogTitle className="text-[10px] font-semibold uppercase tracking-[0.15em] text-stone-400">
+                    <DialogTitle style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--text3)' }}>
                       New task
                     </DialogTitle>
-                    <p className="mt-0.5 text-[13px] font-medium text-stone-600">{dateLabel}</p>
+                    <p style={{ marginTop: 2, fontSize: 13, fontWeight: 500, color: 'var(--text2)' }}>{dateLabel}</p>
                   </div>
-                  <button
-                    type="button"
-                    onClick={onClose}
-                    className="mt-0.5 rounded-lg p-1.5 text-stone-400 transition-colors hover:bg-stone-200/60 hover:text-stone-600"
-                    aria-label="Close"
-                  >
-                    <svg className="h-4 w-4" fill="none" viewBox="0 0 16 16" stroke="currentColor">
+                  <button type="button" onClick={onClose} aria-label="Close"
+                    style={{ marginTop: 2, padding: 6, borderRadius: 8, color: 'var(--text3)', cursor: 'pointer', background: 'transparent', border: 'none' }}>
+                    <svg width="16" height="16" fill="none" viewBox="0 0 16 16" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M2 2l12 12M14 2L2 14" />
                     </svg>
                   </button>
                 </div>
               </div>
 
-              {/* Form body */}
-              <div className="p-6">
-                <form onSubmit={handleSubmit} noValidate className="space-y-4">
+              {/* Body */}
+              <div style={{ padding: 24 }}>
+                <form onSubmit={handleSubmit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                   {error && (
-                    <p className="rounded-lg bg-red-50 px-3.5 py-2.5 text-[12px] text-red-600" role="alert">
+                    <p role="alert" style={{ fontSize: 12, padding: '8px 12px', borderRadius: 8, color: '#dc2626', background: 'rgba(220,38,38,0.1)' }}>
                       {error}
                     </p>
                   )}
 
-                  {/* Title input — primary focus */}
                   <input
                     ref={inputRef}
-                    id="task-title"
                     type="text"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                     placeholder="What needs to be done?"
                     maxLength={200}
-                    className="w-full border-0 border-b-2 border-stone-200 bg-transparent pb-2 text-[16px] font-medium text-stone-800 placeholder-stone-300 outline-none transition-colors focus:border-indigo-500"
+                    style={{ ...field, fontSize: 16, fontWeight: 500 }}
                   />
 
-                  {/* Date picker */}
-                  <div className="space-y-1.5">
-                    <label htmlFor="task-date" className="block text-[11px] font-medium text-stone-400">
+                  <div>
+                    <label htmlFor="task-date" style={{ display: 'block', fontSize: 11, fontWeight: 500, color: 'var(--text3)', marginBottom: 6 }}>
                       Date
                     </label>
-                    <input
-                      id="task-date"
-                      type="date"
-                      value={date}
-                      onChange={(e) => setDate(e.target.value)}
-                      className="w-full rounded-xl border border-stone-200 bg-stone-50 px-3.5 py-2.5 text-[13px] text-stone-700 outline-none transition-all focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-500/15"
-                    />
+                    <input id="task-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} style={field} />
                   </div>
 
-                  {/* Actions */}
-                  <div className="flex gap-2 pt-2">
-                    <button
-                      type="button"
-                      onClick={onClose}
-                      className="flex-1 rounded-xl border border-stone-200 py-2.5 text-[13px] font-medium text-stone-600 transition-colors hover:bg-stone-50 hover:text-stone-700"
-                    >
+                  <div style={{ display: 'flex', gap: 8, paddingTop: 4 }}>
+                    <button type="button" onClick={onClose}
+                      style={{ flex: 1, padding: '10px', borderRadius: 12, fontSize: 13, fontWeight: 500, border: '1px solid var(--divider)', color: 'var(--text2)', background: 'transparent', cursor: 'pointer' }}>
                       Cancel
                     </button>
-                    <button
-                      type="submit"
-                      disabled={loading || !title.trim()}
-                      className="flex-1 rounded-xl bg-indigo-600 py-2.5 text-[13px] font-medium text-white transition-all hover:bg-indigo-700 disabled:opacity-40"
-                    >
+                    <button type="submit" disabled={loading || !title.trim()}
+                      style={{ flex: 1, padding: '10px', borderRadius: 12, fontSize: 13, fontWeight: 500, color: '#fff', background: 'var(--accent)', cursor: 'pointer', opacity: loading || !title.trim() ? 0.4 : 1 }}>
                       {loading ? 'Adding…' : 'Add task'}
                     </button>
                   </div>
                 </form>
               </div>
-
             </DialogPanel>
           </TransitionChild>
         </div>

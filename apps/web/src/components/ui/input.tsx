@@ -48,7 +48,7 @@ export function Input({ label, error, type, id, className = '', ...props }: Inpu
           <HuiButton
             type="button"
             onClick={() => setShow((v) => !v)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 data-[hover]:text-stone-600 focus:outline-none"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text3)] data-[hover]:text-[var(--text2)] focus:outline-none"
             aria-label={show ? 'Hide password' : 'Show password'}
             tabIndex={-1}
           >
