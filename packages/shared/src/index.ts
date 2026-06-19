@@ -1,5 +1,6 @@
 export * from './types/user'
 export * from './types/space'
+export * from './types/milestone'
 export * from './types/task'
 export * from './types/status'
 export * from './types/folder'

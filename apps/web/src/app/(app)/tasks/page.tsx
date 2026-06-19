@@ -7,7 +7,10 @@ import { useSpaces } from '@/components/spaces/space-context'
 import { TaskCreateDialog } from '@/components/ui/task-create-dialog'
 import { TaskDetailDialog } from '@/components/ui/task-detail-dialog'
 import { StatusManager } from '@/components/ui/status-manager'
+import { TaskBoard } from '@/components/ui/task-board'
 import { apiFetch } from '@/lib/auth'
+
+type ViewMode = 'list' | 'board'
 
 const WIDE_FROM = '1970-01-01'
 const WIDE_TO = '2999-12-31'
@@ -20,6 +23,7 @@ export default function TasksPage() {
   const [tasks, setTasks] = useState<Task[]>([])
   const [statuses, setStatuses] = useState<Status[]>([])
   const [spaceFilter, setSpaceFilter] = useState(initialSpace)
+  const [view, setView] = useState<ViewMode>('list')
   const [loading, setLoading] = useState(true)
   const [createOpen, setCreateOpen] = useState(false)
   const [statusOpen, setStatusOpen] = useState(false)
@@ -53,6 +57,16 @@ export default function TasksPage() {
     if (!res.ok) setTasks(prev => prev.map(t => (t.id === task.id ? { ...t, completed: task.completed } : t)))
   }
 
+  async function moveTask(task: Task, statusId: string | null) {
+    setTasks(prev => prev.map(t => (t.id === task.id ? { ...t, statusId } : t)))
+    const res = await apiFetch(`/api/tasks/${task.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ statusId }),
+    })
+    if (!res.ok) setTasks(prev => prev.map(t => (t.id === task.id ? { ...t, statusId: task.statusId } : t)))
+  }
+
   function handleCreated(task: Task) {
     // Respect the active space filter — only show it if it belongs here.
     if (!spaceFilter || task.spaceId === spaceFilter) {
@@ -67,6 +81,18 @@ export default function TasksPage() {
           Tasks
         </h1>
         <div className="app-actions">
+          <div className="flex overflow-hidden rounded-lg" style={{ border: '1px solid var(--divider)' }}>
+            {(['list', 'board'] as ViewMode[]).map(v => (
+              <button
+                key={v}
+                onClick={() => setView(v)}
+                className="px-3 py-1.5 text-[12px] font-medium capitalize"
+                style={{ background: view === v ? 'var(--accent)' : 'var(--bg)', color: view === v ? '#fff' : 'var(--text2)' }}
+              >
+                {v}
+              </button>
+            ))}
+          </div>
           <button
             onClick={() => setStatusOpen(true)}
             className="rounded-xl px-3 py-2 text-[13px] font-medium"
@@ -93,6 +119,14 @@ export default function TasksPage() {
 
       {loading ? (
         <p className="text-[13px]" style={{ color: 'var(--text3)' }}>Loading…</p>
+      ) : view === 'board' ? (
+        <TaskBoard
+          tasks={tasks}
+          statuses={statuses}
+          spaceById={spaceById}
+          onMove={moveTask}
+          onOpen={setDetailTask}
+        />
       ) : tasks.length === 0 ? (
         <p className="text-[13px]" style={{ color: 'var(--text3)' }}>No tasks yet. Create your first one.</p>
       ) : (

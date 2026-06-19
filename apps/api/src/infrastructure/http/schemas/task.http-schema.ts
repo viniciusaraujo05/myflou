@@ -9,6 +9,7 @@ export const CreateTaskBodySchema = z.object({
   hoursSpent: z.number().min(0).max(24).nullable().optional(),
   statusId: z.string().nullable().optional(),
   spaceId: z.string().nullable().optional(),
+  milestoneId: z.string().nullable().optional(),
 })
 
 export const UpdateTaskBodySchema = z.object({
@@ -19,10 +20,12 @@ export const UpdateTaskBodySchema = z.object({
   hoursSpent: z.number().min(0).max(24).nullable().optional(),
   statusId: z.string().nullable().optional(),
   spaceId: z.string().nullable().optional(),
+  milestoneId: z.string().nullable().optional(),
 })
 
 export const GetTasksQuerySchema = z.object({
   from: z.string().regex(DATE_REGEX, 'from must be YYYY-MM-DD'),
   to: z.string().regex(DATE_REGEX, 'to must be YYYY-MM-DD'),
   space: z.string().optional(),
+  milestone: z.string().optional(),
 })

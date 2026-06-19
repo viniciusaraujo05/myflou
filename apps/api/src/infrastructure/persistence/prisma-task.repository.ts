@@ -5,16 +5,21 @@ import type { ITaskRepository } from '../../domain/task/task.repository.js'
 export class PrismaTaskRepository implements ITaskRepository {
   constructor(private readonly prisma: PrismaClient) {}
 
-  async create(userId: string, title: string, date: Date, description?: string | null, hoursSpent?: number | null, statusId?: string | null, spaceId?: string | null): Promise<Task> {
+  async create(userId: string, title: string, date: Date, description?: string | null, hoursSpent?: number | null, statusId?: string | null, spaceId?: string | null, milestoneId?: string | null): Promise<Task> {
     const record = await this.prisma.task.create({
-      data: { userId, title, date, description, hoursSpent, statusId, spaceId: spaceId ?? null },
+      data: { userId, title, date, description, hoursSpent, statusId, spaceId: spaceId ?? null, milestoneId: milestoneId ?? null },
     })
     return this.toEntity(record)
   }
 
-  async findByUserAndDateRange(userId: string, from: Date, to: Date, spaceId?: string): Promise<Task[]> {
+  async findByUserAndDateRange(userId: string, from: Date, to: Date, spaceId?: string, milestoneId?: string): Promise<Task[]> {
     const records = await this.prisma.task.findMany({
-      where: { userId, date: { gte: from, lte: to }, ...(spaceId !== undefined ? { spaceId } : {}) },
+      where: {
+        userId,
+        date: { gte: from, lte: to },
+        ...(spaceId !== undefined ? { spaceId } : {}),
+        ...(milestoneId !== undefined ? { milestoneId } : {}),
+      },
       orderBy: [{ date: 'asc' }, { createdAt: 'asc' }],
     })
     return records.map(r => this.toEntity(r))
@@ -25,7 +30,7 @@ export class PrismaTaskRepository implements ITaskRepository {
     return record ? this.toEntity(record) : null
   }
 
-  async update(id: string, data: { title?: string; date?: Date; completed?: boolean; description?: string | null; hoursSpent?: number | null; statusId?: string | null; spaceId?: string | null }, userId: string): Promise<Task> {
+  async update(id: string, data: { title?: string; date?: Date; completed?: boolean; description?: string | null; hoursSpent?: number | null; statusId?: string | null; spaceId?: string | null; milestoneId?: string | null }, userId: string): Promise<Task> {
     await this.prisma.task.updateMany({ where: { id, userId }, data })
     const record = await this.prisma.task.findUniqueOrThrow({ where: { id } })
     return this.toEntity(record)
@@ -39,6 +44,7 @@ export class PrismaTaskRepository implements ITaskRepository {
     id: string
     userId: string
     spaceId: string | null
+    milestoneId: string | null
     title: string
     date: Date
     completed: boolean
@@ -52,6 +58,7 @@ export class PrismaTaskRepository implements ITaskRepository {
       id: record.id,
       userId: record.userId,
       spaceId: record.spaceId,
+      milestoneId: record.milestoneId,
       title: record.title,
       date: record.date,
       completed: record.completed,

@@ -21,8 +21,8 @@ export async function taskRoutes(app: FastifyInstance) {
       })
     }
     const userId = getRequestUserId(request)
-    const { space, ...rest } = parsed.data
-    const tasks = await app.container.task.getTasks.execute({ userId, ...rest, spaceId: space })
+    const { space, milestone, ...rest } = parsed.data
+    const tasks = await app.container.task.getTasks.execute({ userId, ...rest, spaceId: space, milestoneId: milestone })
     return reply.send(tasks)
   })
 

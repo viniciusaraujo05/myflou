@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Dialog, DialogPanel, DialogTitle, Transition, TransitionChild } from '@headlessui/react'
-import type { Task, Status } from '@flou/shared'
+import type { Task, Status, Milestone } from '@flou/shared'
 import { apiFetch } from '@/lib/auth'
 import { StatusManager } from '@/components/ui/status-manager'
 
@@ -25,6 +25,8 @@ export function TaskDetailDialog({ task, statuses, onClose, onUpdated, onDeleted
   const [description, setDescription] = useState('')
   const [hoursSpent, setHoursSpent] = useState('')
   const [statusId, setStatusId] = useState<string | null>(null)
+  const [milestoneId, setMilestoneId] = useState<string | null>(null)
+  const [milestones, setMilestones] = useState<Milestone[]>([])
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [error, setError] = useState('')
@@ -36,9 +38,13 @@ export function TaskDetailDialog({ task, statuses, onClose, onUpdated, onDeleted
       setDescription(task.description ?? '')
       setHoursSpent(task.hoursSpent != null ? String(task.hoursSpent) : '')
       setStatusId(task.statusId)
+      setMilestoneId(task.milestoneId)
       setError('')
+      apiFetch('/api/milestones').then(r => (r.ok ? r.json() : [])).then(setMilestones)
     }
   }, [task])
+
+  const milestoneOptions = milestones.filter(m => !m.spaceId || m.spaceId === task?.spaceId)
 
   const open = task !== null
 
@@ -63,6 +69,7 @@ export function TaskDetailDialog({ task, statuses, onClose, onUpdated, onDeleted
           description: description.trim() || null,
           hoursSpent: hours,
           statusId,
+          milestoneId,
         }),
       })
       if (!res.ok) { setError('Failed to save'); return }
@@ -262,6 +269,29 @@ export function TaskDetailDialog({ task, statuses, onClose, onUpdated, onDeleted
                         onBlur={e => (e.target.style.borderColor = 'var(--divider)')}
                       />
                     </div>
+
+                    {/* Milestone */}
+                    {milestoneOptions.length > 0 && (
+                      <div>
+                        <label style={{ display: 'block', fontSize: 10, fontWeight: 500, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--text3)', marginBottom: 6 }}>
+                          Milestone
+                        </label>
+                        <select
+                          value={milestoneId ?? ''}
+                          onChange={e => setMilestoneId(e.target.value || null)}
+                          style={{
+                            width: '100%', fontSize: 13, padding: '9px 12px', borderRadius: 10,
+                            border: '1.5px solid var(--divider)', background: 'var(--bg2)', color: 'var(--text)',
+                            outline: 'none', boxSizing: 'border-box',
+                          }}
+                        >
+                          <option value="">None</option>
+                          {milestoneOptions.map(m => (
+                            <option key={m.id} value={m.id}>{m.title}</option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
 
                     {/* Hours spent */}
                     <div>

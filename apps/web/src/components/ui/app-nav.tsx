@@ -6,12 +6,13 @@ import { usePathname } from 'next/navigation'
 import { useSpaces } from '@/components/spaces/space-context'
 import { SpaceFormDialog } from '@/components/spaces/space-form-dialog'
 
-type IconKey = 'home' | 'inbox' | 'tasks' | 'calendar' | 'notes' | 'links' | 'passwords' | 'finance' | 'profile' | 'preferences'
+type IconKey = 'home' | 'inbox' | 'tasks' | 'roadmap' | 'calendar' | 'notes' | 'links' | 'passwords' | 'finance' | 'profile' | 'preferences'
 
 const ICONS: Record<IconKey, React.ReactNode> = {
   home: <path d="M3 9.5L10 3l7 6.5V17a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z M7 18v-7h6v7" />,
   inbox: <path d="M3 11h4l1.5 3h3L13 11h4 M3 11l2.5-6h9L17 11v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6z" />,
   tasks: <path d="M4 6h12 M4 10h12 M4 14h8 M2.5 6l.7.7L4.6 5" />,
+  roadmap: <path d="M5 3v14 M5 4h9l-2 2.5 2 2.5H5" />,
   calendar: <><rect x="2" y="4" width="16" height="14" rx="3" /><path d="M2 8h16M6 2v4M14 2v4" /></>,
   notes: <path d="M4 4h12v9l-4 4H4V4z M12 13v4l4-4h-4M7 8h6M7 11h4" />,
   links: <path d="M8 12a4 4 0 006 0l2-2a4 4 0 00-6-6l-1 1 M12 8a4 4 0 00-6 0L4 10a4 4 0 006 6l1-1" />,
@@ -36,6 +37,7 @@ const VIEW_ITEMS: NavItem[] = [
   { label: 'Home', href: '/home', icon: 'home', exact: true },
   { label: 'Inbox', href: '/inbox', icon: 'inbox' },
   { label: 'Tasks', href: '/tasks', icon: 'tasks' },
+  { label: 'Roadmap', href: '/roadmap', icon: 'roadmap' },
   { label: 'Calendar', href: '/calendar', icon: 'calendar' },
   { label: 'Notes', href: '/notes', icon: 'notes' },
   { label: 'Links', href: '/links', icon: 'links' },
@@ -93,6 +95,29 @@ export function SidebarNav({ collapsed = false }: { collapsed?: boolean }) {
   const isActive = useActiveItem()
   const { spaces, refresh } = useSpaces()
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [showArchived, setShowArchived] = useState(false)
+
+  const activeSpaces = spaces.filter(s => !s.archived)
+  const archivedSpaces = spaces.filter(s => s.archived)
+
+  const renderSpace = (space: { id: string; name: string; color: string }, dimmed = false) => {
+    const href = `/space/${space.id}`
+    const active = isActive(href)
+    return (
+      <Link
+        key={space.id}
+        href={href}
+        className={`flex items-center rounded-xl py-2 text-[13px] font-medium transition-all ${collapsed ? 'justify-center px-0' : 'gap-2.5 px-2.5'}`}
+        style={{ ...navItemStyle(active), opacity: dimmed && !active ? 0.55 : 1 }}
+        title={collapsed ? space.name : undefined}
+        onMouseEnter={e => hoverOn(e, active)}
+        onMouseLeave={e => hoverOff(e, active)}
+      >
+        <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: space.color }} />
+        {!collapsed && <span className="truncate">{space.name}</span>}
+      </Link>
+    )
+  }
 
   const renderItem = (item: NavItem) => {
     const active = isActive(item.href, item.exact)
@@ -131,25 +156,26 @@ export function SidebarNav({ collapsed = false }: { collapsed?: boolean }) {
         </div>
       )}
       <div className="flex flex-col gap-0.5">
-        {spaces.map(space => {
-          const href = `/space/${space.id}`
-          const active = isActive(href)
-          return (
-            <Link
-              key={space.id}
-              href={href}
-              className={`flex items-center rounded-xl py-2 text-[13px] font-medium transition-all ${collapsed ? 'justify-center px-0' : 'gap-2.5 px-2.5'}`}
-              style={navItemStyle(active)}
-              title={collapsed ? space.name : undefined}
-              onMouseEnter={e => hoverOn(e, active)}
-              onMouseLeave={e => hoverOff(e, active)}
-            >
-              <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: space.color }} />
-              {!collapsed && <span className="truncate">{space.name}</span>}
-            </Link>
-          )
-        })}
+        {activeSpaces.map(s => renderSpace(s))}
       </div>
+
+      {!collapsed && archivedSpaces.length > 0 && (
+        <div className="mt-0.5 flex flex-col gap-0.5">
+          <button
+            onClick={() => setShowArchived(v => !v)}
+            className="flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-[12px] font-medium"
+            style={{ color: 'var(--text3)' }}
+          >
+            <svg width="11" height="11" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2"
+              strokeLinecap="round" strokeLinejoin="round"
+              style={{ transform: showArchived ? 'rotate(90deg)' : 'none', transition: 'transform 0.15s' }}>
+              <path d="M7 5l6 5-6 5" />
+            </svg>
+            Archived ({archivedSpaces.length})
+          </button>
+          {showArchived && archivedSpaces.map(s => renderSpace(s, true))}
+        </div>
+      )}
 
       {!collapsed && <SectionLabel>Views</SectionLabel>}
       {collapsed && <div className="my-3 h-px" style={{ background: 'var(--divider)' }} />}

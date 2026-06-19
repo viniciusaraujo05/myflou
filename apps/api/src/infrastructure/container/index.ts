@@ -3,6 +3,7 @@ import type { FastifyInstance } from 'fastify'
 import { PrismaUserRepository } from '../persistence/prisma-user.repository.js'
 import { PrismaRefreshTokenRepository } from '../persistence/prisma-refresh-token.repository.js'
 import { PrismaSpaceRepository } from '../persistence/prisma-space.repository.js'
+import { PrismaMilestoneRepository } from '../persistence/prisma-milestone.repository.js'
 import { PrismaTaskRepository } from '../persistence/prisma-task.repository.js'
 import { PrismaFolderRepository } from '../persistence/prisma-folder.repository.js'
 import { PrismaNoteRepository } from '../persistence/prisma-note.repository.js'
@@ -18,6 +19,10 @@ import { CreateSpaceUseCase } from '../../application/space/create-space.usecase
 import { GetSpacesUseCase } from '../../application/space/get-spaces.usecase.js'
 import { UpdateSpaceUseCase } from '../../application/space/update-space.usecase.js'
 import { DeleteSpaceUseCase } from '../../application/space/delete-space.usecase.js'
+import { CreateMilestoneUseCase } from '../../application/milestone/create-milestone.usecase.js'
+import { GetMilestonesUseCase } from '../../application/milestone/get-milestones.usecase.js'
+import { UpdateMilestoneUseCase } from '../../application/milestone/update-milestone.usecase.js'
+import { DeleteMilestoneUseCase } from '../../application/milestone/delete-milestone.usecase.js'
 import { GetMeUseCase } from '../../application/user/get-me.usecase.js'
 import { UpdateProfileUseCase } from '../../application/user/update-profile.usecase.js'
 import { ChangePasswordUseCase } from '../../application/user/change-password.usecase.js'
@@ -82,6 +87,12 @@ export interface Container {
     getSpaces: GetSpacesUseCase
     updateSpace: UpdateSpaceUseCase
     deleteSpace: DeleteSpaceUseCase
+  }
+  milestone: {
+    createMilestone: CreateMilestoneUseCase
+    getMilestones: GetMilestonesUseCase
+    updateMilestone: UpdateMilestoneUseCase
+    deleteMilestone: DeleteMilestoneUseCase
   }
   task: {
     createTask: CreateTaskUseCase
@@ -148,6 +159,7 @@ export const containerPlugin = fp(async (app: FastifyInstance) => {
   const userRepo = new PrismaUserRepository(app.prisma)
   const refreshTokenRepo = new PrismaRefreshTokenRepository(app.prisma)
   const spaceRepo = new PrismaSpaceRepository(app.prisma)
+  const milestoneRepo = new PrismaMilestoneRepository(app.prisma)
   const taskRepo = new PrismaTaskRepository(app.prisma)
   const folderRepo = new PrismaFolderRepository(app.prisma)
   const noteRepo = new PrismaNoteRepository(app.prisma)
@@ -176,10 +188,16 @@ export const containerPlugin = fp(async (app: FastifyInstance) => {
       updateSpace: new UpdateSpaceUseCase(spaceRepo),
       deleteSpace: new DeleteSpaceUseCase(spaceRepo),
     },
+    milestone: {
+      createMilestone: new CreateMilestoneUseCase(milestoneRepo, spaceRepo),
+      getMilestones: new GetMilestonesUseCase(milestoneRepo),
+      updateMilestone: new UpdateMilestoneUseCase(milestoneRepo, spaceRepo),
+      deleteMilestone: new DeleteMilestoneUseCase(milestoneRepo),
+    },
     task: {
-      createTask: new CreateTaskUseCase(taskRepo, userRepo, spaceRepo),
+      createTask: new CreateTaskUseCase(taskRepo, userRepo, spaceRepo, milestoneRepo),
       getTasks: new GetTasksUseCase(taskRepo),
-      updateTask: new UpdateTaskUseCase(taskRepo, userRepo, spaceRepo),
+      updateTask: new UpdateTaskUseCase(taskRepo, userRepo, spaceRepo, milestoneRepo),
       deleteTask: new DeleteTaskUseCase(taskRepo),
     },
     status: {

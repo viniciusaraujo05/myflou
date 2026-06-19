@@ -20,6 +20,7 @@ model User {
   updatedAt            DateTime       @updatedAt
   refreshTokens        RefreshToken[]
   spaces               Space[]
+  milestones           Milestone[]
   tasks                Task[]
   folders              Folder[]
   notes                Note[]
@@ -44,6 +45,7 @@ model Space {
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
   tasks         Task[]
+  milestones    Milestone[]
   folders       Folder[]
   notes         Note[]
   linkCategories LinkCategory[]
@@ -81,6 +83,8 @@ model Task {
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   spaceId     String?
   space       Space?   @relation(fields: [spaceId], references: [id], onDelete: SetNull)
+  milestoneId String?
+  milestone   Milestone? @relation(fields: [milestoneId], references: [id], onDelete: SetNull)
   title       String
   date        DateTime @db.Date
   completed   Boolean  @default(false)
@@ -93,7 +97,34 @@ model Task {
   @@index([userId])
   @@index([userId, date])
   @@index([userId, spaceId])
+  @@index([milestoneId])
   @@map("tasks")
+}
+
+enum MilestoneStatus {
+  PLANNED
+  IN_PROGRESS
+  DONE
+}
+
+model Milestone {
+  id          String          @id @default(cuid())
+  userId      String
+  user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  spaceId     String?
+  space       Space?          @relation(fields: [spaceId], references: [id], onDelete: SetNull)
+  title       String
+  description String?
+  status      MilestoneStatus @default(PLANNED)
+  targetDate  DateTime?       @db.Date
+  order       Int             @default(0)
+  tasks       Task[]
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  @@index([userId])
+  @@index([userId, spaceId])
+  @@map("milestones")
 }
 
 model Folder {

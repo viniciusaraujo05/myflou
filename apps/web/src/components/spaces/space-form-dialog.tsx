@@ -21,6 +21,7 @@ export function SpaceFormDialog({
   const [name, setName] = useState('')
   const [color, setColor] = useState(COLORS[0])
   const [saving, setSaving] = useState(false)
+  const [archiving, setArchiving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -57,6 +58,21 @@ export function SpaceFormDialog({
       onClose()
     } finally {
       setSaving(false)
+    }
+  }
+
+  async function toggleArchive() {
+    if (!space) return
+    setArchiving(true)
+    try {
+      const res = await apiFetch(`/api/spaces/${space.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ archived: !space.archived }),
+      })
+      if (res.ok) { onSaved(); onClose() }
+    } finally {
+      setArchiving(false)
     }
   }
 
@@ -111,7 +127,19 @@ export function SpaceFormDialog({
 
             {error && <p className="text-[12px]" style={{ color: 'var(--rose)' }}>{error}</p>}
 
-            <div className="mt-1 flex justify-end gap-2">
+            <div className="mt-1 flex items-center gap-2">
+              {space && (
+                <button
+                  type="button"
+                  onClick={toggleArchive}
+                  disabled={archiving}
+                  className="rounded-xl px-3 py-2 text-[13px] font-medium disabled:opacity-50"
+                  style={{ color: 'var(--text2)', border: '1px solid var(--divider)' }}
+                >
+                  {archiving ? '…' : space.archived ? 'Unarchive' : 'Archive'}
+                </button>
+              )}
+              <div className="flex-1" />
               <button
                 type="button"
                 onClick={onClose}

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { Dialog, DialogPanel, DialogTitle, Transition, TransitionChild } from '@headlessui/react'
-import type { Task, Status } from '@flou/shared'
+import type { Task, Status, Milestone } from '@flou/shared'
 import { apiFetch } from '@/lib/auth'
 import { useSpaces } from '@/components/spaces/space-context'
 
@@ -27,6 +27,8 @@ export function TaskCreateDialog({ open, defaultSpaceId, defaultDate, statuses, 
   const [date, setDate] = useState(defaultDate ?? todayStr())
   const [spaceId, setSpaceId] = useState<string | null>(defaultSpaceId ?? null)
   const [statusId, setStatusId] = useState<string | null>(null)
+  const [milestoneId, setMilestoneId] = useState<string | null>(null)
+  const [milestones, setMilestones] = useState<Milestone[]>([])
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -37,9 +39,14 @@ export function TaskCreateDialog({ open, defaultSpaceId, defaultDate, statuses, 
       setDate(defaultDate ?? todayStr())
       setSpaceId(defaultSpaceId ?? null)
       setStatusId(null)
+      setMilestoneId(null)
       setError('')
+      apiFetch('/api/milestones').then(r => (r.ok ? r.json() : [])).then(setMilestones)
     }
   }, [open, defaultSpaceId, defaultDate])
+
+  // Milestones relevant to the chosen space (plus space-less ones).
+  const milestoneOptions = milestones.filter(m => !m.spaceId || m.spaceId === spaceId)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -50,7 +57,7 @@ export function TaskCreateDialog({ open, defaultSpaceId, defaultDate, statuses, 
       const res = await apiFetch('/api/tasks', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title: title.trim(), date, spaceId, statusId }),
+        body: JSON.stringify({ title: title.trim(), date, spaceId, statusId, milestoneId }),
       })
       const data = await res.json()
       if (!res.ok) { setError(data.message || 'Failed to create task'); return }
@@ -180,6 +187,22 @@ export function TaskCreateDialog({ open, defaultSpaceId, defaultDate, statuses, 
                           )
                         })}
                       </div>
+                    </div>
+                  )}
+
+                  {milestoneOptions.length > 0 && (
+                    <div>
+                      <label style={labelStyle}>Milestone</label>
+                      <select
+                        value={milestoneId ?? ''}
+                        onChange={e => setMilestoneId(e.target.value || null)}
+                        style={{ ...fieldStyle, appearance: 'auto' as React.CSSProperties['appearance'] }}
+                      >
+                        <option value="">None</option>
+                        {milestoneOptions.map(m => (
+                          <option key={m.id} value={m.id}>{m.title}</option>
+                        ))}
+                      </select>
                     </div>
                   )}
                 </div>

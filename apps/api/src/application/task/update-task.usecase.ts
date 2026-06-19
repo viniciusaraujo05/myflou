@@ -1,6 +1,7 @@
 import type { ITaskRepository } from '../../domain/task/task.repository.js'
 import type { IUserRepository } from '../../domain/user/user.repository.js'
 import type { ISpaceRepository } from '../../domain/space/space.repository.js'
+import type { IMilestoneRepository } from '../../domain/milestone/milestone.repository.js'
 import type { TaskDTO } from '../../domain/task/task.entity.js'
 import { TaskNotFoundError, TaskAccessDeniedError } from '../../domain/task/task.errors.js'
 import { InvalidRelationError } from '../../domain/shared/domain-error.js'
@@ -15,6 +16,7 @@ interface Input {
   hoursSpent?: number | null
   statusId?: string | null
   spaceId?: string | null
+  milestoneId?: string | null
 }
 
 export class UpdateTaskUseCase {
@@ -22,6 +24,7 @@ export class UpdateTaskUseCase {
     private readonly taskRepo: ITaskRepository,
     private readonly userRepo: IUserRepository,
     private readonly spaceRepo: ISpaceRepository,
+    private readonly milestoneRepo: IMilestoneRepository,
   ) {}
 
   async execute(input: Input): Promise<TaskDTO> {
@@ -38,6 +41,10 @@ export class UpdateTaskUseCase {
       const space = await this.spaceRepo.findById(input.spaceId)
       if (!space || space.userId !== input.userId) throw new InvalidRelationError('Space')
     }
+    if (input.milestoneId) {
+      const milestone = await this.milestoneRepo.findById(input.milestoneId)
+      if (!milestone || milestone.userId !== input.userId) throw new InvalidRelationError('Milestone')
+    }
 
     const data: {
       title?: string
@@ -47,6 +54,7 @@ export class UpdateTaskUseCase {
       hoursSpent?: number | null
       statusId?: string | null
       spaceId?: string | null
+      milestoneId?: string | null
     } = {}
 
     if (input.title !== undefined) data.title = input.title.trim()
@@ -56,6 +64,7 @@ export class UpdateTaskUseCase {
     if ('hoursSpent' in input) data.hoursSpent = input.hoursSpent ?? null
     if ('statusId' in input) data.statusId = input.statusId ?? null
     if ('spaceId' in input) data.spaceId = input.spaceId ?? null
+    if ('milestoneId' in input) data.milestoneId = input.milestoneId ?? null
 
     const updated = await this.taskRepo.update(input.taskId, data, input.userId)
     return updated.toDTO()

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useParams, notFound } from 'next/navigation'
 import Link from 'next/link'
 import type { Task, NoteSummary, Link as LinkType, Credential, Subscription } from '@flou/shared'
@@ -27,6 +27,31 @@ async function getList<T>(path: string): Promise<T[]> {
   if (!res.ok) return []
   const data = await res.json()
   return Array.isArray(data) ? data : []
+}
+
+function daysAgoStr(n: number): string {
+  const d = new Date()
+  d.setDate(d.getDate() - n)
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+function fmtHours(h: number): string {
+  return h % 1 === 0 ? String(h) : h.toFixed(1)
+}
+
+function computeInsights(tasks: Task[]) {
+  const since7 = daysAgoStr(7)
+  const since30 = daysAgoStr(30)
+  const completed = tasks.filter(t => t.completed)
+  const totalHours = tasks.reduce((s, t) => s + (t.hoursSpent ?? 0), 0)
+  return {
+    open: tasks.length - completed.length,
+    completed: completed.length,
+    completionPct: tasks.length ? Math.round((completed.length / tasks.length) * 100) : 0,
+    totalHours,
+    done30: completed.filter(t => t.date >= since30).length,
+    hours7: tasks.filter(t => t.date >= since7).reduce((s, t) => s + (t.hoursSpent ?? 0), 0),
+  }
 }
 
 export default function SpaceOverviewPage() {
@@ -56,6 +81,8 @@ export default function SpaceOverviewPage() {
     return () => { active = false }
   }, [id])
 
+  const insights = useMemo(() => computeInsights(data.tasks), [data.tasks])
+
   if (spaces.length > 0 && !space) notFound()
 
   return (
@@ -72,6 +99,9 @@ export default function SpaceOverviewPage() {
             <Link href={`/tasks?space=${id}`} className="rounded-xl px-3 py-2 text-[13px] font-medium" style={{ background: 'var(--accent)', color: '#fff' }}>
               Open tasks
             </Link>
+            <Link href={`/roadmap?space=${id}`} className="rounded-xl px-3 py-2 text-[13px] font-medium" style={{ background: 'var(--bg2)', color: 'var(--text2)' }}>
+              Roadmap
+            </Link>
             <button onClick={() => setEditing(true)} className="rounded-xl px-3 py-2 text-[13px] font-medium" style={{ background: 'var(--bg2)', color: 'var(--text2)' }}>
               Edit space
             </button>
@@ -82,6 +112,16 @@ export default function SpaceOverviewPage() {
       {loading ? (
         <p className="text-[13px]" style={{ color: 'var(--text3)' }}>Loading…</p>
       ) : (
+        <>
+        <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+          <Stat label="Open tasks" value={insights.open} />
+          <Stat label="Completed" value={insights.completed} />
+          <Stat label="Completion" value={`${insights.completionPct}%`} />
+          <Stat label="Total hours" value={fmtHours(insights.totalHours)} />
+          <Stat label="Done · 30d" value={insights.done30} />
+          <Stat label="Hours · 7d" value={fmtHours(insights.hours7)} />
+        </div>
+
         <div className="responsive-card-grid-wide">
           <Section title="Tasks" count={data.tasks.length} href={`/tasks?space=${id}`}
             items={data.tasks} render={t => (
@@ -96,9 +136,19 @@ export default function SpaceOverviewPage() {
           <Section title="Subscriptions" count={data.subscriptions.length} href="/finance"
             items={data.subscriptions} render={s => <span style={{ color: 'var(--text)' }}>{s.name}</span>} />
         </div>
+        </>
       )}
 
       {space && <SpaceFormDialog open={editing} onClose={() => setEditing(false)} onSaved={refresh} space={space} />}
+    </div>
+  )
+}
+
+function Stat({ label, value }: { label: string; value: string | number }) {
+  return (
+    <div className="flex flex-col gap-1 rounded-xl p-3" style={{ background: 'var(--bg2)' }}>
+      <span className="text-[11px] font-medium uppercase tracking-wide" style={{ color: 'var(--text3)' }}>{label}</span>
+      <span className="font-serif text-[24px] font-medium" style={{ color: 'var(--text)' }}>{value}</span>
     </div>
   )
 }
